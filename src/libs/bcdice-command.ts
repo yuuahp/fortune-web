@@ -1,6 +1,11 @@
-import {BCDiceResult} from "@/utils/bcdice-response";
+import {BCDiceResult} from "@/libs/bcdice-fetch";
 import Mexp from "math-expression-evaluator";
-import {lastOf} from "@/utils/utils";
+import {lastOf} from "@/libs/utils";
+
+export type DiceRange = {
+    min: number;
+    max: number;
+}
 
 export const getTexts = (result: BCDiceResult): [string] => {
     const texts = result.text.split(" ＞ ")
@@ -23,9 +28,9 @@ export const getFormattedCommand = (result: BCDiceResult): string => {
 
 const isCC = (command: string): boolean => command.toLowerCase().startsWith("cc");
 
-type CCResult = "CRITICAL" | "EXTREME" | "HARD" | "REGULAR" | "FAILURE" | "FUMBLE"
+export type CCResult = "CRITICAL" | "EXTREME" | "HARD" | "REGULAR" | "FAILURE" | "FUMBLE"
 
-function convertCCResult(message: string): CCResult | undefined {
+function messageToCCResult(message: string): CCResult | undefined {
     switch (message) {
         case "クリティカル":
             return "CRITICAL"
@@ -42,13 +47,15 @@ function convertCCResult(message: string): CCResult | undefined {
     }
 }
 
-export function getCC(command: string, result: BCDiceResult): {
+export type CC = {
     rate?: number,
     value: number,
-    range: [number, number],
+    range: DiceRange,
     result?: CCResult
-} | null {
-    if (!isCC(command)) return null
+}
+
+export function getCC(command: string, result: BCDiceResult): CC | undefined {
+    if (!isCC(command)) return undefined
 
     const texts = getTexts(result)
 
@@ -58,26 +65,33 @@ export function getCC(command: string, result: BCDiceResult): {
         return {
             rate: parseInt(command.split("<=")[1]),
             value: parseInt(texts[texts.length - 2]),
-            range: [1, 100],
-            result: convertCCResult(texts[texts.length - 1]),
+            range: {min: 1, max: 100},
+            result: messageToCCResult(texts[texts.length - 1]),
         }
     } else { // 1D100 ＞ 15
         return {
             value: parseInt(texts[texts.length - 1]),
-            range: [1, 100],
+            range: {min: 1, max: 100},
         }
     }
 }
 
 const mexp = new Mexp
+
+export type DResult = "SUCCESS" | "FAILURE"
+
 type DCompareMethod = "GreaterEqual" | "GreaterThan" | "LessEqual" | "LessThan" | "Equal" | "NotEqual"
 
-export function getD(command: string, result: BCDiceResult): {
+export type D = {
     border?: number,
     compareMethod?: DCompareMethod,
     value: number,
-    range: [number, number],
-} | null {
+    range: DiceRange,
+    result?: DResult
+}
+
+export function getD(command: string, result: BCDiceResult): D | undefined {
+    if (isCC(command)) return undefined
 
     // [Regex to detect dice commands, Regex to split dice commands, Function to calculate max and min]
     type RegexTuple = [RegExp, RegExp, (numbers: [number, number, number]) => [number, number]]
@@ -156,7 +170,7 @@ export function getD(command: string, result: BCDiceResult): {
             break
     }
 
-    if (!allRegex.some(([regex]) => regex.test(diceCommand))) return null;
+    if (!allRegex.some(([regex]) => regex.test(diceCommand))) return undefined;
 
     let maxCommand = diceCommand;
     let minCommand = diceCommand;
@@ -182,10 +196,16 @@ export function getD(command: string, result: BCDiceResult): {
     const texts = getTexts(result)
     const value = parseInt((borderExists ? texts[texts.length - 2] : lastOf(texts)) as string)
 
+    let dResult: DResult | undefined = undefined
+
+    if (borderExists)
+        dResult = result.success ? "SUCCESS" : "FAILURE"
+
     return {
         border: border,
         compareMethod: compareMethod,
-        range: [max, min],
-        value: value
+        range: {max, min},
+        value: value,
+        result: dResult
     }
 }

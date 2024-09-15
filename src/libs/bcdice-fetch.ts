@@ -1,3 +1,8 @@
+export const fetcher = (
+    url: string,
+    {arg}: { arg: string }
+) => fetch(`${url}?command=${encodeURIComponent(arg)}`).then(res => res.json())
+
 export type BCDiceResponse = {
     ok: boolean;
     reason?: string;
