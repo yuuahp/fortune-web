@@ -118,13 +118,11 @@ export function getD(command: string, result: BCDiceResult): D | undefined {
     }];
     const dMaxRegex: RegexTuple = [/\d+d\d+max/gi, /d|max/gi, ([dices, sides]) => {
         const max = dices * sides
-        const min = dices
-        return [max, min]
+        return [max, dices]
     }];
     const dMinRegex: RegexTuple = [/\d+d\d+min/gi, /d|min/gi, ([dices, sides]) => {
         const max = dices * sides
-        const min = dices
-        return [max, min]
+        return [max, dices]
     }];
     const dRegex: RegexTuple = [/\d+d\d+/gi, /d/gi, ([dices, sides]) => {
         return [dices * sides, dices]
@@ -208,4 +206,52 @@ export function getD(command: string, result: BCDiceResult): D | undefined {
         value: value,
         result: dResult
     }
+}
+
+export type Choice = {
+    candidates: string[],
+    chosen: string[],
+    indexes: number[]
+}
+
+/**
+ * Command Formats:
+ * - choice{number?}[candidate1,candidate2,...] (or ())
+ *   result: candidateN, candidateM, ...
+ * - choice{number?} candidate1 candidate2 ...
+ *   result: candidateN candidateM ...
+ * All candidate strings are trimmed by API
+ */
+export function getChoice(command: string, result: BCDiceResult): Choice | undefined {
+    const formattedCommand = getFormattedCommand(result)
+
+    if (!formattedCommand.startsWith("choice")) return undefined
+
+    const regexSquareBracket = /^choice(\d+)?\[(?<candidates>[^\[\]]+)]$/gi
+    const regexParentheses = /^choice(\d+)?\((?<candidates>[^()]+)\)$/gi
+    const regexSpace = /^choice(\d+)?\s(?<candidates>.+)$/gi
+
+    const bracedCandidates = (regexSquareBracket.exec(formattedCommand) || regexParentheses.exec(formattedCommand))?.groups?.candidates?.split(",")
+    const spaceCandidates = regexSpace.exec(formattedCommand)?.groups?.candidates?.split(" ")
+    const candidates = bracedCandidates || spaceCandidates
+
+    console.log(bracedCandidates, spaceCandidates)
+
+    if (!candidates) return undefined
+
+    const chosen: string[] = []
+    const chosenString = lastOf(getTexts(result)) as string
+
+    if (bracedCandidates)
+        chosen.push(...chosenString.split(","))
+    else if (spaceCandidates)
+        chosen.push(...chosenString.split(" "))
+
+    console.log(result.rands)
+
+    const rands = result.rands
+
+    const indexes = rands.map((rand, index) => rand.value - 1 + rands.filter((r, i) => i < index && r.value <= rand.value).length)
+
+    return {candidates, chosen, indexes}
 }
