@@ -92,19 +92,18 @@ export default function Home() {
     }
 
     // Auto-scroll to the end of the history when new entry is added
-
     const endHistory = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
         endHistory?.current?.scrollIntoView({
-            behavior: "smooth"
+            behavior: "instant"
         })
     }, [history.length])
 
     return (
         <ThemeProvider theme={darkTheme}>
             <CssBaseline/>
-            <main className="flex h-screen w-screen flex-col-reverse gap-8 p-8 bg-zinc-950 md:flex-row">
+            <main className="flex h-screen w-screen flex-col-reverse gap-4 md:gap-8 p-4 md:p-8 bg-zinc-950 md:flex-row">
                 <div className="h-1/2 w-full md:h-full md:w-1/2">
                     <div className="flex flex-col gap-y-2 mb-8 h-[calc(100%-2rem-56px)] overflow-y-scroll"
                          ref={historyBlock}>

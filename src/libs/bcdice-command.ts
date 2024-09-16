@@ -15,15 +15,23 @@ export const getTexts = (result: BCDiceResult): [string] => {
 
     return texts as [string]
 }
-export const getFormattedCommand = (result: BCDiceResult): string => {
+export const getFormattedCommand = (result: BCDiceResult): { command: string, display: string } => {
     // examples:
     // CC<=50 -> (1D100<=50) ボーナス・ペナルティダイス[0]
     // CC -> 1D100
     // 2d3+5d6 -> (2D3+5D6)
 
-    const commandText = getTexts(result)[0];
-    const parenthesized = /^\(([^)]+)\)/g.test(commandText)
-    return parenthesized ? commandText.split(/[()]/gi)[1] : commandText
+    const commandText = getTexts(result)[0]
+    const isParenthesized = /^\(([^)]+)\)/g.test(commandText)
+    const parenthesized = commandText.split(/[()]/gi)[1]
+
+    return isParenthesized ? {
+        command: parenthesized,
+        display: `(${parenthesized})`
+    } : {
+        command: commandText,
+        display: commandText
+    }
 }
 
 const isCC = (command: string): boolean => command.toLowerCase().startsWith("cc");
@@ -133,7 +141,7 @@ export function getD(command: string, result: BCDiceResult): D | undefined {
 
     const compareRegex = />=|>|<|<=|==|=|!=|<>/gi
 
-    const formattedCommand = getFormattedCommand(result)
+    const formattedCommand = getFormattedCommand(result).command
     const commandElements = formattedCommand.split(compareRegex).filter((it) => it !== "")
     const diceCommand = commandElements[0]
     const borderExists = commandElements.length === 2
@@ -223,7 +231,7 @@ export type Choice = {
  * All candidate strings are trimmed by API
  */
 export function getChoice(command: string, result: BCDiceResult): Choice | undefined {
-    const formattedCommand = getFormattedCommand(result)
+    const formattedCommand = getFormattedCommand(result).command
 
     if (!formattedCommand.startsWith("choice")) return undefined
 
@@ -235,8 +243,6 @@ export function getChoice(command: string, result: BCDiceResult): Choice | undef
     const spaceCandidates = regexSpace.exec(formattedCommand)?.groups?.candidates?.split(" ")
     const candidates = bracedCandidates || spaceCandidates
 
-    console.log(bracedCandidates, spaceCandidates)
-
     if (!candidates) return undefined
 
     const chosen: string[] = []
@@ -246,8 +252,6 @@ export function getChoice(command: string, result: BCDiceResult): Choice | undef
         chosen.push(...chosenString.split(","))
     else if (spaceCandidates)
         chosen.push(...chosenString.split(" "))
-
-    console.log(result.rands)
 
     const rands = result.rands
 

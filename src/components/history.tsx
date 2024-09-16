@@ -1,28 +1,30 @@
 import {HistoryEntry} from "@/libs/history";
-import {getCC, getChoice, getD, getTexts} from "@/libs/bcdice-command";
+import {getCC, getChoice, getD, getFormattedCommand, getTexts} from "@/libs/bcdice-command";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faCaretRight} from "@awesome.me/kit-ae9e2bd1c8/icons/classic/solid";
-import {CCMeter, DMeter} from "@/components/meters";
+import {faAngleDown, faAngleUp, faCaretRight} from "@awesome.me/kit-ae9e2bd1c8/icons/classic/solid";
 import {getCCResultAccent} from "@/libs/bcdice";
+import {HistoryDetail} from "@/components/history-detail";
+import {Tooltip} from "@mui/material";
 
 export function History({entry, toggleActive}: {
     entry: HistoryEntry,
     toggleActive: () => void
 }) {
     const {command, result, active} = entry
-    const elements = [command, ...getTexts(result)]
+
+    const {display: displayedCommand, command: formattedCommand} = getFormattedCommand(result)
+
+    const elements = [command, ...getTexts(result).map((it, i) => i === 0 ? it.replace(displayedCommand, "").trim() : it).filter(it => it !== "")]
 
     const cc = getCC(command, result)
     const d = getD(command, result)
     const choice = getChoice(command, result)
 
-    const primaryValue = cc?.value || d?.value || undefined
-
     const accent = getCCResultAccent(cc?.result)
 
     return (
         <div
-            className={`group p-2 hover:bg-zinc-900 border border-transparent hover:border-zinc-800 rounded-2xl duration-200 flex flex-col gap-y-2 transition-colors ${active && '!border-zinc-800 bg-zinc-900'}`}
+            className={`group p-2 hover:bg-zinc-900 border border-transparent rounded-2xl duration-200 flex flex-col gap-y-2 transition-colors ${active && '!border-zinc-800 bg-zinc-900'}`}
             onClick={() => {
                 toggleActive()
             }}>
@@ -33,7 +35,7 @@ export function History({entry, toggleActive}: {
                         <div className={`h-full w-2 rounded-full ${accent.fg}`}></div>
                     </div>
                 }
-                <div className="flex flex-wrap gap-x-2 px-2 w-full">
+                <div className="flex flex-wrap gap-x-2 pl-2 w-full">
                     {
                         elements.map((text, index) => {
                             if (index === 0)
@@ -43,19 +45,37 @@ export function History({entry, toggleActive}: {
                                             !active &&
                                             <FontAwesomeIcon className={`mr-2 ${accent.text}`} icon={faCaretRight}/>
                                         }
-                                        <span
-                                            className={`text-zinc-700 group-hover:text-zinc-600 max-w-full truncate ${active && '!text-zinc-600'}`}>{text}</span>
+                                        <Tooltip title={formattedCommand}>
+                                            <span
+                                                className={`text-zinc-700 group-hover:text-zinc-600 max-w-full truncate ${active && '!text-zinc-600'}`}>
+                                                {text}
+                                            </span>
+                                        </Tooltip>
                                     </p>
                                 )
 
                             return (
-                                <p key={index} className="text-nowrap max-w-full">
+                                <p key={index} className="text-wrap max-w-full last:mr-2">
                                     <FontAwesomeIcon className="mr-2 text-zinc-700" icon={faCaretRight}/>
                                     <span className="text-wrap max-w-full truncate">{text}</span>
                                 </p>
                             )
                         })
                     }
+                    <div className="grow flex justify-end">
+                        <div
+                            className="
+                            opacity-0 group-hover:opacity-100
+                            group/fp-button bg-zinc-800 hover:bg-zinc-700 hover:mr-1
+                            cursor-pointer select-none transition-all
+                            px-4 rounded-full font-bold text-nowrap
+                        ">
+                            Details
+                            <FontAwesomeIcon icon={active ? faAngleUp : faAngleDown}
+                                             className={`ml-2 group-hover/fp-button:ml-1 ${active ? 'group-active/fp-button:-translate-y-0.5' : 'group-active/fp-button:translate-y-0.5'} transition-all`}/>
+                        </div>
+                    </div>
+
                 </div>
             </div>
             {
@@ -66,59 +86,7 @@ export function History({entry, toggleActive}: {
             }
             {
                 active &&
-                <div className="flex w-full gap-x-2">
-                    {
-                        (cc || d) &&
-                        <div className="inline-flex h-20 w-20 flex-col">
-                            <div
-                                className="mb-1 flex w-20 items-center justify-center rounded-t-lg rounded-b-md border border-zinc-800 text-4xl font-bold h-[3.25rem] bg-zinc-950">
-                                {primaryValue}
-                            </div>
-                            <div
-                                className={`h-[calc(100%-3.25rem-.25rem)] flex justify-center items-center bg-zinc-950 border border-zinc-800 rounded-b-lg rounded-t-md text-sm font-bold ${accent.text}`}>
-                                {cc?.result || d?.compareMethod || "D"}
-                            </div>
-                        </div>
-                    }
-                    <div className="py-2 pl-2 w-full">
-                        {
-                            cc &&
-                            <div className="w-full flex items-center gap-x-2">
-                                <span>{cc.range.min}</span>
-                                <CCMeter className="inline w-full max-w-48" cc={cc}/>
-                                <span>{cc.range.max}</span>
-                                {/*TODO: use fortune point*/}
-                            </div>
-                        }
-                        {
-                            d &&
-                            <div className="w-full flex items-center gap-x-2">
-                                <span>{d.range.min}</span>
-                                <DMeter className="inline w-full max-w-48" d={d}/>
-                                <span>{d.range.max}</span>
-                            </div>
-                        }
-                        {
-                            choice &&
-                            <div className="w-full">
-                                <div className="flex flex-wrap gap-x-1 gap-y-2">
-                                    {
-                                        choice.candidates.map((candidate, index) => {
-                                            return (
-                                                <div key={index} className={`
-                                                    px-3 rounded-sm first:rounded-l-lg last:rounded-r-lg 
-                                                    ${choice.indexes.includes(index) ? 'bg-green-900 text-green-200 font-bold' : 'bg-zinc-800'}
-                                                `}>
-                                                    {candidate}
-                                                </div>
-                                            )
-                                        })
-                                    }
-                                </div>
-                            </div>
-                        }
-                    </div>
-                </div>
+                <HistoryDetail cc={cc} d={d} choice={choice} accent={accent}/>
             }
         </div>
     )

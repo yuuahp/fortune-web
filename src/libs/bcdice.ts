@@ -1,11 +1,13 @@
 import {CCResult} from "@/libs/bcdice-command";
 
+export type Accent = {
+    text: string,
+    fg: string,
+    bg: string
+}
+
 export const colors: {
-    [key: string]: {
-        text: string,
-        fg: string,
-        bg: string
-    }
+    [key: string]: Accent
 } = {
     critical: {
         text: "text-yellow-500",

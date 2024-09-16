@@ -30,8 +30,6 @@ export function CCMeter({className, cc}: {
 
     const noCheckColor = cc.value === cc.range.min ? colors.critical : (cc.value === cc.range.max ? colors.fumble : colors.normal)
 
-    console.log(cc, cc.result ? color : noCheckColor)
-
     return (
         <Meter
             className={className}
