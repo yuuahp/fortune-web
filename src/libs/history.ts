@@ -6,4 +6,6 @@ export type HistoryEntry = {
     activeFixed: boolean
     command: string
     result: BCDiceResult
+    push?: BCDiceResult
+    fortune?: number
 }

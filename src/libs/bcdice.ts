@@ -1,4 +1,4 @@
-import {CCResult} from "@/libs/bcdice-command";
+import {CCLevel} from "@/libs/bcdice-command";
 
 export type Accent = {
     text: string,
@@ -6,6 +6,7 @@ export type Accent = {
     bg: string
 }
 
+// TODO: move to ccLevels
 export const colors: {
     [key: string]: Accent
 } = {
@@ -46,4 +47,4 @@ export const colors: {
     }
 }
 
-export const getCCResultAccent = (result?: CCResult) => colors[result?.toLowerCase() || "normal"]
+export const getCCResultAccent = (result?: CCLevel) => colors[result?.toLowerCase() || "normal"]

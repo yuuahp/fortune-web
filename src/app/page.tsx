@@ -9,6 +9,10 @@ import {BCDiceResponse, fetcher, isBCDiceError, isBCDiceResult} from "@/libs/bcd
 import {HistoryEntry} from "@/libs/history";
 import {History} from "@/components/history";
 import {v6 as uuidv6} from 'uuid';
+import {Provider, useDispatch, useSelector} from "react-redux";
+import {store} from "@/stores/store";
+import {addHistory, selectHistory, toggleActive} from "@/stores/history-slice";
+import {lastOf} from "@/libs/utils";
 
 const darkTheme = createTheme({
     palette: {
@@ -16,16 +20,18 @@ const darkTheme = createTheme({
     },
 });
 
-export default function Home() {
+export function Main() {
     const historyBlock = useRef<HTMLDivElement>(null)
 
     const [textField, setTextField] = useState<string>("");
     const diceCommand = useRef<string>("");
 
-    const [history, setHistory] = useState<HistoryEntry[]>([]);
+    const history = useSelector(selectHistory)
 
     const errorPreviously = useRef<boolean>(false)
     const errorMessage = useRef<string>("")
+
+    const dispatch = useDispatch()
 
     const {
         trigger
@@ -36,14 +42,6 @@ export default function Home() {
                 if (isBCDiceResult(data)) {
                     errorPreviously.current = false
 
-                    const autoClosedEntries = history.map((value) => {
-                        if (!value.activeFixed) {
-                            return {...value, active: false}
-                        } else {
-                            return {...value}
-                        }
-                    })
-
                     const newEntry: HistoryEntry = {
                         id: uuidv6(),
                         active: true,
@@ -52,7 +50,7 @@ export default function Home() {
                         result: data
                     }
 
-                    setHistory([...autoClosedEntries, newEntry]);
+                    dispatch(addHistory(newEntry))
                 } else if (isBCDiceError(data)) {
                     errorPreviously.current = true
                     errorMessage.current = `${diceCommand.current} - ${data.reason}`
@@ -81,9 +79,9 @@ export default function Home() {
     }
 
     function reroll() {
-        if (history.length === 0) return;
+        if (history.length <= 0) return;
 
-        const lastCommand = history[history.length - 1].command;
+        const lastCommand = lastOf(history)!!.command;
 
         diceCommand.current = lastCommand
 
@@ -103,21 +101,19 @@ export default function Home() {
     return (
         <ThemeProvider theme={darkTheme}>
             <CssBaseline/>
-            <main className="flex h-screen w-screen flex-col-reverse gap-4 md:gap-8 p-4 md:p-8 bg-zinc-950 md:flex-row">
+            <main
+                className="flex h-screen w-screen flex-col-reverse gap-4 md:gap-8 p-4 md:p-8 bg-zinc-950 md:flex-row">
                 <div className="h-1/2 w-full md:h-full md:w-1/2">
                     <div className="flex flex-col gap-y-2 mb-8 h-[calc(100%-2rem-56px)] overflow-y-scroll"
                          ref={historyBlock}>
                         {
                             history.map((entry) => {
-                                return <History key={entry.id} entry={entry} toggleActive={() => {
-                                    setHistory(history.map((value) => {
-                                        if (value.id === entry.id) { // clicked entry
-                                            return {...value, active: !value.active, activeFixed: true}
-                                        } else {
-                                            return {...value}
-                                        }
-                                    }))
-                                }}/>
+                                return <History
+                                    key={entry.id}
+                                    entry={entry}
+                                    toggleActive={() => {
+                                        dispatch(toggleActive(entry.id))
+                                    }}/>
                             })
                         }
                         <div ref={endHistory}></div>
@@ -132,7 +128,7 @@ export default function Home() {
                                        <InputAdornment position="end">
                                            <IconButton aria-label="reroll most prevous dice"
                                                        onClick={() => reroll()}
-                                                       disabled={history.length === 0}>
+                                                       disabled={history.length <= 0}>
                                                <FontAwesomeIcon icon={faRotate}/>
                                            </IconButton>
                                            <IconButton aria-label="roll dice"
@@ -163,4 +159,12 @@ export default function Home() {
             </main>
         </ThemeProvider>
     );
+}
+
+export default function Home() {
+    return (
+        <Provider store={store}>
+            <Main/>
+        </Provider>
+    )
 }

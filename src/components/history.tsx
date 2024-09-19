@@ -1,7 +1,7 @@
 import {HistoryEntry} from "@/libs/history";
 import {getCC, getChoice, getD, getFormattedCommand, getTexts} from "@/libs/bcdice-command";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faAngleDown, faAngleUp, faCaretRight} from "@awesome.me/kit-ae9e2bd1c8/icons/classic/solid";
+import {faCaretRight} from "@awesome.me/kit-ae9e2bd1c8/icons/classic/solid";
 import {getCCResultAccent} from "@/libs/bcdice";
 import {HistoryDetail} from "@/components/history-detail";
 import {Tooltip} from "@mui/material";
@@ -24,11 +24,8 @@ export function History({entry, toggleActive}: {
 
     return (
         <div
-            className={`group p-2 hover:bg-zinc-900 border border-transparent rounded-2xl duration-200 flex flex-col gap-y-2 transition-colors ${active && '!border-zinc-800 bg-zinc-900'}`}
-            onClick={() => {
-                toggleActive()
-            }}>
-            <div className={`flex w-full ${active && 'pl-1'}`}>
+            className={`group p-2 hover:bg-zinc-900 border border-transparent rounded-2xl duration-200 flex flex-col gap-y-2 transition-colors ${active && '!border-zinc-800 bg-zinc-900'}`}>
+            <div onClick={toggleActive} className={`flex w-full ${active && 'pl-1'}`}>
                 {
                     active &&
                     <div className="mr-1 h-full py-1">
@@ -62,20 +59,6 @@ export function History({entry, toggleActive}: {
                             )
                         })
                     }
-                    <div className="grow flex justify-end">
-                        <div
-                            className="
-                            opacity-0 group-hover:opacity-100
-                            group/fp-button bg-zinc-800 hover:bg-zinc-700 hover:mr-1
-                            cursor-pointer select-none transition-all
-                            px-4 rounded-full font-bold text-nowrap
-                        ">
-                            Details
-                            <FontAwesomeIcon icon={active ? faAngleUp : faAngleDown}
-                                             className={`ml-2 group-hover/fp-button:ml-1 ${active ? 'group-active/fp-button:-translate-y-0.5' : 'group-active/fp-button:translate-y-0.5'} transition-all`}/>
-                        </div>
-                    </div>
-
                 </div>
             </div>
             {
@@ -86,7 +69,8 @@ export function History({entry, toggleActive}: {
             }
             {
                 active &&
-                <HistoryDetail cc={cc} d={d} choice={choice} accent={accent}/>
+                <HistoryDetail entry={entry} cc={cc} d={d} choice={choice} accent={accent} active={active}
+                               closeHandler={toggleActive}/>
             }
         </div>
     )

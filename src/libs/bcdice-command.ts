@@ -36,30 +36,49 @@ export const getFormattedCommand = (result: BCDiceResult): { command: string, di
 
 const isCC = (command: string): boolean => command.toLowerCase().startsWith("cc");
 
-export type CCResult = "CRITICAL" | "EXTREME" | "HARD" | "REGULAR" | "FAILURE" | "FUMBLE"
+export type CCLevel = "CRITICAL" | "EXTREME" | "HARD" | "REGULAR" | "FAILURE" | "FUMBLE"
 
-function messageToCCResult(message: string): CCResult | undefined {
-    switch (message) {
-        case "クリティカル":
-            return "CRITICAL"
-        case "イクストリーム成功":
-            return "EXTREME"
-        case "ハード成功":
-            return "HARD"
-        case "レギュラー成功":
-            return "REGULAR"
-        case "失敗":
-            return "FAILURE"
-        case "ファンブル":
-            return "FUMBLE"
-    }
+export type CCLevelDetail = {
+    level: CCLevel,
+    jp: string,
+    accent: string,
 }
+
+export const levelDetails: CCLevelDetail[] = [
+    {level: "CRITICAL", jp: "クリティカル", accent: "yellow"},
+    {level: "EXTREME", jp: "エクストリーム成功", accent: "violet"},
+    {level: "HARD", jp: "ハード成功", accent: "sky"},
+    {level: "REGULAR", jp: "レギュラー成功", accent: "green"},
+    {level: "FAILURE", jp: "失敗", accent: "zinc"},
+    {level: "FUMBLE", jp: "ファンブル", accent: "red"}
+]
+
+export const getResultDetail = (result: CCLevel) =>
+    levelDetails.find(it => it.level === result)!!
 
 export type CC = {
     rate?: number,
     value: number,
     range: DiceRange,
-    result?: CCResult
+    result?: CCLevel
+}
+
+export type RatedCC = {
+    rate: number,
+    value: number,
+    range: DiceRange,
+    result: CCLevel
+}
+
+export function getRatedCC(cc: CC): RatedCC | undefined {
+    if (cc.rate === undefined || cc.result === undefined) return undefined
+
+    return {
+        rate: cc.rate,
+        value: cc.value,
+        range: cc.range,
+        result: cc.result
+    }
 }
 
 export function getCC(command: string, result: BCDiceResult): CC | undefined {
@@ -74,7 +93,7 @@ export function getCC(command: string, result: BCDiceResult): CC | undefined {
             rate: parseInt(command.split("<=")[1]),
             value: parseInt(texts[texts.length - 2]),
             range: {min: 1, max: 100},
-            result: messageToCCResult(texts[texts.length - 1]),
+            result: levelDetails.find(it => it.jp === texts[texts.length - 1])!!.level,
         }
     } else { // 1D100 ＞ 15
         return {
@@ -84,15 +103,23 @@ export function getCC(command: string, result: BCDiceResult): CC | undefined {
     }
 }
 
+export function getCCHardRate(cc: RatedCC): number {
+    return Math.floor(cc.rate / 2)
+}
+
+export function getCCExtremeRate(cc: RatedCC): number {
+    return Math.floor(cc.rate / 5)
+}
+
 const mexp = new Mexp
 
 export type DResult = "SUCCESS" | "FAILURE"
 
-type DCompareMethod = "GreaterEqual" | "GreaterThan" | "LessEqual" | "LessThan" | "Equal" | "NotEqual"
+export type CompareMethod = "GreaterEqual" | "GreaterThan" | "LessEqual" | "LessThan" | "Equal" | "NotEqual"
 
 export type D = {
     border?: number,
-    compareMethod?: DCompareMethod,
+    compareMethod?: CompareMethod,
     value: number,
     range: DiceRange,
     result?: DResult
@@ -151,7 +178,7 @@ export function getD(command: string, result: BCDiceResult): D | undefined {
         ? formattedCommand.replaceAll(diceCommand, "").replaceAll(border!!.toString(), "")
         : undefined
 
-    let compareMethod: DCompareMethod | undefined = undefined
+    let compareMethod: CompareMethod | undefined = undefined
 
     switch (borderCompare) {
         case ">=":

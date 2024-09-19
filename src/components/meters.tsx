@@ -1,6 +1,6 @@
 import {useEffect, useRef, useState} from "react";
 import {colors, getCCResultAccent} from "@/libs/bcdice";
-import {CC, D, DiceRange} from "@/libs/bcdice-command";
+import {CC, CompareMethod, D, DiceRange} from "@/libs/bcdice-command";
 
 export function DMeter({className, d}: {
     className?: string,
@@ -17,6 +17,7 @@ export function DMeter({className, d}: {
             range={d.range}
             barAccent={minMaxColor || checkColor}
             meterAccent={d.result ? colors.regular : colors.normal}
+            compareMethod={d.compareMethod}
         />
     )
 }
@@ -38,6 +39,7 @@ export function CCMeter({className, cc}: {
             range={cc.range}
             barAccent={cc.result ? color : noCheckColor}
             meterAccent={useSpecialBarAccent ? color : (cc.result ? colors.regular : colors.normal)}
+            compareMethod={cc.rate ? "LessEqual" : undefined}
         />
     )
 }
@@ -54,7 +56,8 @@ export function Meter(
             text: "text-zinc-500",
             fg: "bg-zinc-500",
             bg: "bg-zinc-800"
-        }
+        },
+        compareMethod
     }: {
         className?: string,
         value: number,
@@ -69,7 +72,8 @@ export function Meter(
             text: string,
             fg: string,
             bg: string
-        }
+        },
+        compareMethod?: CompareMethod
     }
 ) {
     const meterRef = useRef<HTMLDivElement>(null)
@@ -105,6 +109,13 @@ export function Meter(
     const accentRangeWidth = (borderRate !== undefined) ? (borderRate >= 100 ? 100 : borderRate) : 100
     const normalRangeWidth = (borderRate !== undefined) ? 100 - borderRate : undefined
 
+    const isGreaterSuccess = compareMethod?.includes("Greater")
+    const isLessSuccess = compareMethod?.includes("Less")
+    const isNotEqualSuccess = compareMethod === "NotEqual"
+
+    const leftRangeColor = isLessSuccess || isNotEqualSuccess ? meterAccent : colors.normal
+    const rightRangeColor = isGreaterSuccess || isNotEqualSuccess ? meterAccent : colors.normal
+
     return (
         <div ref={meterRef}
              className={`h-3 flex gap-x-1 rounded-full relative ${!show && 'opacity-0'} ` + className}>
@@ -116,12 +127,12 @@ export function Meter(
                  className="w-4 rounded-l-full bg-yellow-900"></div>
             {
                 accentRangeWidth > 0 &&
-                <div className={`h-full transition-all min-w-2 ${meterAccent.bg}`}
+                <div className={`h-full transition-all min-w-2 ${leftRangeColor.bg}`}
                      style={{width: `calc(${accentRangeWidth}% - 1rem)`}}></div>
             }
             {
                 (normalRangeWidth && (normalRangeWidth > 0))
-                    ? <div className="h-full bg-zinc-800 transition-all min-w-2"
+                    ? <div className={`h-full transition-all min-w-2 ${rightRangeColor.bg}`}
                            style={{width: `calc(${normalRangeWidth}% - 1rem)`}}></div>
                     : undefined
             }
