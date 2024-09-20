@@ -8,12 +8,13 @@ import {
     CCLevelDetail,
     getCCExtremeRate,
     getCCHardRate,
-    getResultDetail,
+    getLevelDetail,
     levelDetails,
     RatedCC
 } from "@/libs/bcdice-command";
 import {RootState} from "@/stores/store";
 import {useEffect, useState} from "react";
+import {FpLabel} from "@/components/fp-label";
 
 export function FpForm({historyId, ratedCC, setOpen}: {
     historyId: string, ratedCC: RatedCC,
@@ -31,11 +32,11 @@ export function FpForm({historyId, ratedCC, setOpen}: {
     const extremeRate = getCCExtremeRate(ratedCC)
 
     const lowerResults = levelDetails.filter((_, index) =>
-        index < levelDetails.indexOf(getResultDetail(ratedCC.result))
+        index < levelDetails.indexOf(getLevelDetail(ratedCC.level))
     )
 
     const possibleResults = levelDetails.filter((_, index) =>
-        index <= levelDetails.indexOf(getResultDetail("REGULAR"))
+        index <= levelDetails.indexOf(getLevelDetail("REGULAR"))
     )
 
     const choices = possibleResults.map(levelDetail => {
@@ -72,18 +73,6 @@ export function FpForm({historyId, ratedCC, setOpen}: {
 
     function getChoiceOf(level: CCLevel | "CUSTOM") {
         return choices.find(it => it.levelDetail.level === level)
-    }
-
-    function FpLabel({points}: { points: number }) {
-        return (
-            <span
-                className={`bg-zinc-50 text-zinc-950 font-bold px-2 inline-flex gap-x-1 items-center mr-2 rounded`}>
-                <span>{points}</span>
-                <span className="text-xs">
-                    FP
-                </span>
-            </span>
-        )
     }
 
     const [selection, setSelection] = useState<CCLevel | "CUSTOM" | undefined>(undefined)

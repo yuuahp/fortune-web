@@ -26,8 +26,8 @@ export function CCMeter({className, cc}: {
     className?: string,
     cc: CC
 }) {
-    const color = getCCResultAccent(cc.result)
-    const useSpecialBarAccent = ["EXTREME", "HARD"].includes(cc.result || "")
+    const color = getCCResultAccent(cc.level)
+    const useSpecialBarAccent = ["EXTREME", "HARD"].includes(cc.level || "")
 
     const noCheckColor = cc.value === cc.range.min ? colors.critical : (cc.value === cc.range.max ? colors.fumble : colors.normal)
 
@@ -37,8 +37,8 @@ export function CCMeter({className, cc}: {
             value={cc.value}
             border={cc?.rate}
             range={cc.range}
-            barAccent={cc.result ? color : noCheckColor}
-            meterAccent={useSpecialBarAccent ? color : (cc.result ? colors.regular : colors.normal)}
+            barAccent={cc.level ? color : noCheckColor}
+            meterAccent={useSpecialBarAccent ? color : (cc.level ? colors.regular : colors.normal)}
             compareMethod={cc.rate ? "LessEqual" : undefined}
         />
     )

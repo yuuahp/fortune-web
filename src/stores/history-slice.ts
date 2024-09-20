@@ -1,6 +1,7 @@
 import {createSlice} from "@reduxjs/toolkit";
 import {HistoryEntry} from "@/libs/history";
 import {RootState} from "@/stores/store";
+import {BCDiceResult} from "@/libs/bcdice-fetch";
 
 export type HistoryState = {
     data: HistoryEntry[]
@@ -38,11 +39,20 @@ const historySlice = createSlice({
                     return {...value}
                 }
             })
+        },
+        addPush(state, {payload}: { payload: { id: string, push: BCDiceResult } }) {
+            state.data = state.data.map((value) => {
+                if (value.id === payload.id) {
+                    return {...value, push: payload.push}
+                } else {
+                    return {...value}
+                }
+            })
         }
     }
 })
 
-export const {addHistory, toggleActive, addFortune} = historySlice.actions
+export const {addHistory, toggleActive, addFortune, addPush} = historySlice.actions
 export const selectHistory = (state: RootState) => state.history.data
 export const getHistoryById = (state: RootState, id: string) =>
     state.history.data.find(entry => entry.id === id)

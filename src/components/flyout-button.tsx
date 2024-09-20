@@ -2,13 +2,14 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {CSSProperties, ReactNode, useEffect, useRef, useState} from "react";
 import {IconDefinition} from "@fortawesome/fontawesome-svg-core";
 
-export function FlyoutButton({className, children, name, icon, open, setOpen}: {
+export function FlyoutButton({className, children, name, icon, open, setOpen, disabled}: {
     className?: string,
     children?: ReactNode,
     name: string,
     icon: IconDefinition,
     open: boolean,
-    setOpen: (open: boolean) => void
+    setOpen: (open: boolean) => void,
+    disabled?: boolean
 }) {
     const buttonRef = useRef<HTMLDivElement>(null)
     const flyoutRef = useRef<HTMLDivElement>(null)
@@ -64,17 +65,18 @@ export function FlyoutButton({className, children, name, icon, open, setOpen}: {
         <div className={`${className}`}>
             <div ref={buttonRef}
                  className={`
-                 group/fp-button bg-zinc-800 hover:bg-zinc-700 active:mr-1
-                 cursor-pointer select-none transition-all
+                 group/fp-button bg-zinc-800 ${!disabled && 'cursor-pointer hover:bg-zinc-700 active:mr-1'}
+                 select-none transition-all
                  py-1 px-4 rounded-full font-bold text-nowrap
                  `}
                  onClick={event => {
                      event.stopPropagation()
+                     if (disabled) return
                      setOpen(!open)
                  }}>
-                {name}
+                {!disabled && name}
                 <FontAwesomeIcon icon={icon}
-                                 className={`ml-2 group-active/fp-button:ml-1 transition-all`}/>
+                                 className={`${!disabled && 'ml-2 group-active/fp-button:ml-1'} transition-all ${disabled && 'text-zinc-500'}`}/>
             </div>
             {
                 open &&

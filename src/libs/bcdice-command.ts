@@ -53,31 +53,51 @@ export const levelDetails: CCLevelDetail[] = [
     {level: "FUMBLE", jp: "ファンブル", accent: "red"}
 ]
 
-export const getResultDetail = (result: CCLevel) =>
-    levelDetails.find(it => it.level === result)!!
+export const getLevelDetail = (level: CCLevel) =>
+    levelDetails.find(it => it.level === level)!!
 
 export type CC = {
     rate?: number,
     value: number,
     range: DiceRange,
-    result?: CCLevel
+    level?: CCLevel
 }
 
 export type RatedCC = {
     rate: number,
     value: number,
     range: DiceRange,
-    result: CCLevel
+    level: CCLevel
+}
+
+export function checkLevel(rate: number, value: number): CCLevel {
+    if (value === 1) return "CRITICAL"
+    if (value <= rate / 5) return "EXTREME"
+    if (value <= rate / 2) return "HARD"
+    if (value <= rate) return "REGULAR"
+    if (value === 100 || (rate < 50 && value >= 96)) return "FUMBLE"
+    return "FAILURE"
 }
 
 export function getRatedCC(cc: CC): RatedCC | undefined {
-    if (cc.rate === undefined || cc.result === undefined) return undefined
+    if (cc.rate === undefined || cc.level === undefined) return undefined
 
     return {
         rate: cc.rate,
         value: cc.value,
         range: cc.range,
-        result: cc.result
+        level: cc.level
+    }
+}
+
+export function applyFP(ratedCC: RatedCC, points: number): RatedCC {
+    const appliedValue = ratedCC.value - points
+
+    return {
+        rate: ratedCC.rate,
+        value: appliedValue,
+        range: ratedCC.range,
+        level: checkLevel(ratedCC.rate, appliedValue)
     }
 }
 
@@ -93,7 +113,7 @@ export function getCC(command: string, result: BCDiceResult): CC | undefined {
             rate: parseInt(command.split("<=")[1]),
             value: parseInt(texts[texts.length - 2]),
             range: {min: 1, max: 100},
-            result: levelDetails.find(it => it.jp === texts[texts.length - 1])!!.level,
+            level: levelDetails.find(it => it.jp === texts[texts.length - 1])!!.level,
         }
     } else { // 1D100 ＞ 15
         return {
@@ -113,7 +133,7 @@ export function getCCExtremeRate(cc: RatedCC): number {
 
 const mexp = new Mexp
 
-export type DResult = "SUCCESS" | "FAILURE"
+export type DLevel = "SUCCESS" | "FAILURE"
 
 export type CompareMethod = "GreaterEqual" | "GreaterThan" | "LessEqual" | "LessThan" | "Equal" | "NotEqual"
 
@@ -122,7 +142,7 @@ export type D = {
     compareMethod?: CompareMethod,
     value: number,
     range: DiceRange,
-    result?: DResult
+    result?: DLevel
 }
 
 export function getD(command: string, result: BCDiceResult): D | undefined {
@@ -229,7 +249,7 @@ export function getD(command: string, result: BCDiceResult): D | undefined {
     const texts = getTexts(result)
     const value = parseInt((borderExists ? texts[texts.length - 2] : lastOf(texts)) as string)
 
-    let dResult: DResult | undefined = undefined
+    let dResult: DLevel | undefined = undefined
 
     if (borderExists)
         dResult = result.success ? "SUCCESS" : "FAILURE"
