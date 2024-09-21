@@ -1,13 +1,14 @@
 import {useEffect, useRef, useState} from "react";
-import {colors, getCCResultAccent} from "@/libs/bcdice";
-import {CC, CompareMethod, D, DiceRange} from "@/libs/bcdice-command";
+import {DiceRange} from "@/libs/bcdice";
+import {CompareMethod, D} from "@/libs/commands/sum-dices";
+import {CC, getLevelDetail} from "@/libs/commands/cc";
 
 export function DMeter({className, d}: {
     className?: string,
     d: D
 }) {
-    const checkColor = d.result === "SUCCESS" ? colors.regular : colors.normal
-    const minMaxColor = d.value === d.range.min ? colors.critical : (d.value === d.range.max ? colors.fumble : undefined)
+    const checkColor = d.level === "SUCCESS" ? getLevelDetail("REGULAR") : undefined
+    const minMaxColor = d.value === d.range.min ? getLevelDetail("CRITICAL") : (d.value === d.range.max ? getLevelDetail("FUMBLE") : undefined)
 
     return (
         <Meter
@@ -15,8 +16,8 @@ export function DMeter({className, d}: {
             value={d.value}
             border={d?.border}
             range={d.range}
-            barAccent={minMaxColor || checkColor}
-            meterAccent={d.result ? colors.regular : colors.normal}
+            barAccent={(minMaxColor || checkColor)?.accent}
+            meterAccent={d.level ? getLevelDetail("REGULAR").accent : undefined}
             compareMethod={d.compareMethod}
         />
     )
@@ -26,10 +27,11 @@ export function CCMeter({className, cc}: {
     className?: string,
     cc: CC
 }) {
-    const color = getCCResultAccent(cc.level)
+
+    const levelDetail = cc.level ? getLevelDetail(cc.level) : undefined
     const useSpecialBarAccent = ["EXTREME", "HARD"].includes(cc.level || "")
 
-    const noCheckColor = cc.value === cc.range.min ? colors.critical : (cc.value === cc.range.max ? colors.fumble : colors.normal)
+    const noCheckColor = cc.value === cc.range.min ? getLevelDetail("CRITICAL") : (cc.value === cc.range.max ? getLevelDetail("FUMBLE") : undefined)
 
     return (
         <Meter
@@ -37,8 +39,8 @@ export function CCMeter({className, cc}: {
             value={cc.value}
             border={cc?.rate}
             range={cc.range}
-            barAccent={cc.level ? color : noCheckColor}
-            meterAccent={useSpecialBarAccent ? color : (cc.level ? colors.regular : colors.normal)}
+            barAccent={cc.level ? levelDetail?.accent : noCheckColor?.accent}
+            meterAccent={useSpecialBarAccent ? levelDetail?.accent : (cc.level ? getLevelDetail("REGULAR").accent : undefined)}
             compareMethod={cc.rate ? "LessEqual" : undefined}
         />
     )
@@ -47,32 +49,16 @@ export function CCMeter({className, cc}: {
 export function Meter(
     {
         className, value, border, range,
-        barAccent = {
-            text: "text-zinc-500",
-            fg: "bg-zinc-500",
-            bg: "bg-zinc-800"
-        },
-        meterAccent = {
-            text: "text-zinc-500",
-            fg: "bg-zinc-500",
-            bg: "bg-zinc-800"
-        },
+        barAccent = "zinc",
+        meterAccent = "zinc",
         compareMethod
     }: {
         className?: string,
         value: number,
         border?: number,
         range: DiceRange,
-        barAccent: {
-            text: string,
-            fg: string,
-            bg: string
-        },
-        meterAccent: {
-            text: string,
-            fg: string,
-            bg: string
-        },
+        barAccent?: string,
+        meterAccent?: string,
         compareMethod?: CompareMethod
     }
 ) {
@@ -113,26 +99,26 @@ export function Meter(
     const isLessSuccess = compareMethod?.includes("Less")
     const isNotEqualSuccess = compareMethod === "NotEqual"
 
-    const leftRangeColor = isLessSuccess || isNotEqualSuccess ? meterAccent : colors.normal
-    const rightRangeColor = isGreaterSuccess || isNotEqualSuccess ? meterAccent : colors.normal
+    const leftRangeColor = isLessSuccess || isNotEqualSuccess ? meterAccent : "zinc"
+    const rightRangeColor = isGreaterSuccess || isNotEqualSuccess ? meterAccent : "zinc"
 
     return (
         <div ref={meterRef}
              className={`h-3 flex gap-x-1 rounded-full relative ${!show && 'opacity-0'} ` + className}>
             <div // bar
-                className={`w-4 h-[1.75rem] ${barAccent.fg} rounded-full absolute border-[.25rem] border-zinc-900 -top-2 transition-all`}
+                className={`w-4 h-[1.75rem] bg-${barAccent}-500 rounded-full absolute border-[.25rem] border-zinc-900 -top-2 transition-all`}
                 style={{left: `calc(${meterLeft}% - 0.5rem)`}}>
             </div>
             <div data-name="critical or min"
                  className="w-4 rounded-l-full bg-yellow-900"></div>
             {
                 accentRangeWidth > 0 &&
-                <div className={`h-full transition-all min-w-2 ${leftRangeColor.bg}`}
+                <div className={`h-full transition-all min-w-2 bg-${leftRangeColor}-800`}
                      style={{width: `calc(${accentRangeWidth}% - 1rem)`}}></div>
             }
             {
                 (normalRangeWidth && (normalRangeWidth > 0))
-                    ? <div className={`h-full transition-all min-w-2 ${rightRangeColor.bg}`}
+                    ? <div className={`h-full transition-all min-w-2 bg-${rightRangeColor}-800`}
                            style={{width: `calc(${normalRangeWidth}% - 1rem)`}}></div>
                     : undefined
             }

@@ -4,8 +4,7 @@ import {addPush, getHistoryById} from "@/stores/history-slice";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faBomb} from "@awesome.me/kit-ae9e2bd1c8/icons/classic/solid";
 import {Button} from "@mui/material";
-import useSWRMutation from "swr/mutation";
-import {BCDiceResponse, fetcher, isBCDiceError, isBCDiceResult} from "@/libs/bcdice-fetch";
+import {useBCDiceRoll} from "@/libs/bcdice-fetch";
 import {useState} from "react";
 
 export function PushForm({historyId, setOpen}: {
@@ -24,30 +23,24 @@ export function PushForm({historyId, setOpen}: {
     const [errorOccurred, setErrorOccurred] = useState(false)
     const [errorMessage, setErrorMessage] = useState("")
 
-    const {
-        trigger
-    } = useSWRMutation<BCDiceResponse>(
-        `https://bcdice.onlinesession.app/v2/game_system/Cthulhu7th/roll`,
-        fetcher, {
-            onSuccess: data => {
-                if (isBCDiceResult(data)) {
-                    setErrorOccurred(false)
-
-                    dispatch(addPush({id: entry.id, push: data}))
-                } else if (isBCDiceError(data)) {
-                    setErrorOccurred(true)
-                    setErrorMessage(`${data.reason}`)
-                } else {
-                    setErrorOccurred(true)
-                    setErrorMessage("Unknown Error")
-                }
-            },
-            onError: () => {
-                setErrorOccurred(true)
-                setErrorMessage("Request to BCDice API failed")
-            }
+    const {fetchRoll} = useBCDiceRoll({
+        onSuccess: (result) => {
+            setErrorOccurred(false)
+            dispatch(addPush({id: entry.id, push: result}))
+        },
+        onBCDiceError: (error) => {
+            setErrorOccurred(true)
+            setErrorMessage(`${error.reason}`)
+        },
+        onTypeError: () => {
+            setErrorOccurred(true)
+            setErrorMessage("Unknown Error")
+        },
+        onFetchError: () => {
+            setErrorOccurred(true)
+            setErrorMessage("Request to BCDice API failed")
         }
-    )
+    })
 
     return (
         <div>
@@ -64,7 +57,7 @@ export function PushForm({historyId, setOpen}: {
                 </Button>
                 <Button type="submit" variant="contained" onClick={() => {
                     // @ts-ignore
-                    trigger(entry.command).then();
+                    fetchRoll(entry.command).then();
                     setOpen(false)
                 }}>
                     確定

@@ -1,4 +1,3 @@
-import {applyFP, CC, getLevelDetail, getRatedCC} from "@/libs/bcdice-command";
 import {CCMeter} from "@/components/meters";
 import {FlyoutButton} from "@/components/flyout-button";
 import {faBomb, faClover} from "@awesome.me/kit-ae9e2bd1c8/icons/classic/solid";
@@ -8,6 +7,7 @@ import {FpLabel} from "@/components/fp-label";
 import {HistoryEntry} from "@/libs/history";
 import React, {ReactElement, useState} from "react";
 import {PrimaryValue} from "@/components/history-insights/insight-components";
+import {applyFP, CC, getLevelDetail, getRatedCC, getRatedCCOf} from "@/libs/commands/cc";
 
 export function CCInsight({entry, cc, closeButton}: {
     entry: HistoryEntry,
@@ -16,8 +16,9 @@ export function CCInsight({entry, cc, closeButton}: {
 }) {
 
     const ratedCC = getRatedCC(cc)
+    const pushCC = entry.push ? getRatedCCOf(entry.command, entry.push) : undefined
     const fpApplied = (ratedCC && entry.fortune) ? applyFP(ratedCC, entry.fortune) : undefined
-    const effectiveCC = fpApplied || ratedCC || cc
+    const effectiveCC = pushCC || fpApplied || ratedCC || cc
 
     const accent = effectiveCC.level ? getLevelDetail(effectiveCC.level).accent : "zinc";
 

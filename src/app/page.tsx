@@ -2,10 +2,9 @@
 
 import {createTheme, CssBaseline, IconButton, InputAdornment, TextField, ThemeProvider} from "@mui/material";
 import {ChangeEvent, useEffect, useRef, useState} from "react";
-import useSWRMutation from "swr/mutation";
 import {faPaperPlane, faRotate} from "@awesome.me/kit-ae9e2bd1c8/icons/classic/solid";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {BCDiceResponse, fetcher, isBCDiceError, isBCDiceResult} from "@/libs/bcdice-fetch";
+import {useBCDiceRoll} from "@/libs/bcdice-fetch";
 import {HistoryEntry} from "@/libs/history";
 import {History} from "@/components/history";
 import {v6 as uuidv6} from 'uuid';
@@ -33,49 +32,41 @@ export function Main() {
 
     const dispatch = useDispatch()
 
-    const {
-        trigger
-    } = useSWRMutation<BCDiceResponse>(
-        `https://bcdice.onlinesession.app/v2/game_system/Cthulhu7th/roll`,
-        fetcher, {
-            onSuccess: data => {
-                if (isBCDiceResult(data)) {
-                    errorPreviously.current = false
+    const {fetchRoll} = useBCDiceRoll({
+        onSuccess: result => {
+            errorPreviously.current = false
 
-                    const newEntry: HistoryEntry = {
-                        id: uuidv6(),
-                        active: true,
-                        activeFixed: false,
-                        command: diceCommand.current,
-                        result: data
-                    }
-
-                    dispatch(addHistory(newEntry))
-                } else if (isBCDiceError(data)) {
-                    errorPreviously.current = true
-                    errorMessage.current = `${diceCommand.current} - ${data.reason}`
-                } else {
-                    errorPreviously.current = true
-                    errorMessage.current = "Unknown Error"
-                }
-
-                setTextField("");
-            },
-            onError: () => {
-                errorPreviously.current = true
-                errorMessage.current = "Request to BCDice API failed"
-                setTextField("");
+            const newEntry: HistoryEntry = {
+                id: uuidv6(),
+                active: true,
+                activeFixed: false,
+                command: diceCommand.current,
+                result: result
             }
-        }
-    )
+
+            dispatch(addHistory(newEntry))
+        },
+        onBCDiceError: error => {
+            errorPreviously.current = true
+            errorMessage.current = `${diceCommand.current} - ${error.reason}`
+        },
+        onTypeError: () => {
+            errorPreviously.current = true
+            errorMessage.current = "Unknown Error"
+        },
+        onFetchError: () => {
+            errorPreviously.current = true
+            errorMessage.current = "Request to BCDice API failed"
+        },
+        anyway: () => setTextField("")
+    })
 
     function roll() {
         if (textField === "") return;
 
         diceCommand.current = textField
 
-        // @ts-ignore
-        trigger(textField).then();
+        fetchRoll(textField).then();
     }
 
     function reroll() {
@@ -85,8 +76,7 @@ export function Main() {
 
         diceCommand.current = lastCommand
 
-        // @ts-ignore
-        trigger(lastCommand).then();
+        fetchRoll(lastCommand).then();
     }
 
     // Auto-scroll to the end of the history when new entry is added

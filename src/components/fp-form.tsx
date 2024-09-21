@@ -3,18 +3,18 @@ import {faClover} from "@awesome.me/kit-ae9e2bd1c8/icons/classic/solid";
 import {Button, FormControl, FormControlLabel, Radio, RadioGroup, TextField} from "@mui/material";
 import {useDispatch, useSelector} from "react-redux";
 import {addFortune, getHistoryById} from "@/stores/history-slice";
+import {RootState} from "@/stores/store";
+import {useEffect, useState} from "react";
+import {FpLabel} from "@/components/fp-label";
 import {
     CCLevel,
     CCLevelDetail,
     getCCExtremeRate,
     getCCHardRate,
     getLevelDetail,
-    levelDetails,
+    ccLevels,
     RatedCC
-} from "@/libs/bcdice-command";
-import {RootState} from "@/stores/store";
-import {useEffect, useState} from "react";
-import {FpLabel} from "@/components/fp-label";
+} from "@/libs/commands/cc";
 
 export function FpForm({historyId, ratedCC, setOpen}: {
     historyId: string, ratedCC: RatedCC,
@@ -31,12 +31,12 @@ export function FpForm({historyId, ratedCC, setOpen}: {
     const hardRate = getCCHardRate(ratedCC)
     const extremeRate = getCCExtremeRate(ratedCC)
 
-    const lowerResults = levelDetails.filter((_, index) =>
-        index < levelDetails.indexOf(getLevelDetail(ratedCC.level))
+    const lowerResults = ccLevels.filter((_, index) =>
+        index < ccLevels.indexOf(getLevelDetail(ratedCC.level))
     )
 
-    const possibleResults = levelDetails.filter((_, index) =>
-        index <= levelDetails.indexOf(getLevelDetail("REGULAR"))
+    const possibleResults = ccLevels.filter((_, index) =>
+        index <= ccLevels.indexOf(getLevelDetail("REGULAR"))
     )
 
     const choices = possibleResults.map(levelDetail => {

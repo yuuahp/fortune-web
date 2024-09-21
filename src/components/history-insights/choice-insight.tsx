@@ -1,5 +1,5 @@
-import {Choice} from "@/libs/bcdice-command";
 import {ReactElement} from "react";
+import {Choice} from "@/libs/commands/choice";
 
 export function ChoiceInsight({choice, closeButton}: { choice: Choice, closeButton: ReactElement }) {
     const candidates = choice.candidates

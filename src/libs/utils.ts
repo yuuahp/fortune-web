@@ -6,6 +6,6 @@ export function returnIf<T>(condition: boolean, doTrue: () => T, doFalse: () => 
     return condition ? doTrue() : doFalse();
 }
 
-export function lastOf<T>(arr: T[]): T | undefined {
-    return arr.length > 0 ? arr[arr.length - 1] : undefined;
+export function lastOf<T>(arr: T[], back: number = 0): T | undefined {
+    return arr.length > 0 ? arr[arr.length - 1 - back] : undefined;
 }

@@ -1,10 +1,12 @@
-import {CC, Choice, D} from "@/libs/bcdice-command";
 import {ReactElement, useEffect, useRef} from "react";
 import {HistoryEntry} from "@/libs/history";
 import {CCInsight} from "@/components/history-insights/cc-insight";
 import {DInsight} from "@/components/history-insights/d-insight";
 import {ChoiceInsight} from "@/components/history-insights/choice-insight";
 import {CloseButton} from "@/components/history-insights/insight-components";
+import {D} from "@/libs/commands/sum-dices";
+import {CC} from "@/libs/commands/cc";
+import {Choice} from "@/libs/commands/choice";
 
 export function HistoryInsight({entry, cc, d, choice, closeHandler}: {
     entry: HistoryEntry,
