@@ -1,5 +1,4 @@
-import {BCDiceResult} from "@/libs/bcdice-fetch";
-import {DiceRange, getTexts, getTextsOf} from "@/libs/bcdice";
+import {DiceRange, getTexts} from "@/libs/bcdice";
 import {lastOf} from "@/libs/utils";
 
 export const getFormattedCommand = (resultText: string): { command: string, display: string } => {
@@ -21,12 +20,12 @@ export const getFormattedCommand = (resultText: string): { command: string, disp
     }
 }
 
-export function isCC(command: string, result: BCDiceResult): boolean {
-    const inputRegex = /^cc(\d*|-\d+)<=.+/gi
-    const formattedRegex = /^1d100<=\d+$/gi
+export function isCC(command: string, resultText: string): boolean {
+    const inputRegex = /^cc((\d*|-\d+)<=.+)?/gi
+    const formattedRegex = /^1d100(<=\d+)?$/gi
 
     const inputMatch = inputRegex.test(command)
-    const formattedMatch = formattedRegex.test(getFormattedCommand(result.text).command)
+    const formattedMatch = formattedRegex.test(getFormattedCommand(resultText).command)
 
     return inputMatch && formattedMatch
 }
@@ -86,8 +85,8 @@ export function getRatedCC(cc: CC): RatedCC | undefined {
     }
 }
 
-export function getRatedCCOf(command: string, result: BCDiceResult): RatedCC | undefined {
-    const cc = getCC(command, result)
+export function getRatedCCOf(command: string, resultText: string): RatedCC | undefined {
+    const cc = getCC(command, resultText)
 
     if (!cc) return undefined
 
@@ -105,13 +104,13 @@ export function applyFP(ratedCC: RatedCC, points: number): RatedCC {
     }
 }
 
-export function getCC(command: string, result: BCDiceResult): CC | undefined {
-    if (!isCC(command, result)) return undefined
+export function getCC(command: string, resultText: string): CC | undefined {
+    if (!isCC(command, resultText)) return undefined
 
     // const commandRegex = /^cc(?<bpdices>\d*|-\d+)<=(?<rate>\d+|\([\d+\-*/FUR]+\))(?<level>[rehc]?)$/gi
 
-    const texts = getTextsOf(result)
-    const formattedCommand = getFormattedCommand(result.text).command
+    const texts = getTexts(resultText)
+    const formattedCommand = getFormattedCommand(resultText).command
 
     const borderExists = formattedCommand.split("<=").length === 2 // other than <= fails for CC
 

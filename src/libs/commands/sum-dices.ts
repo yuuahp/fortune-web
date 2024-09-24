@@ -16,7 +16,7 @@ export type D = {
 }
 
 export function getD(command: string, result: BCDiceResult): D | undefined {
-    if (isCC(command, result)) return undefined
+    if (isCC(command, result.text)) return undefined
 
     // [Regex to detect dice commands, Regex to split dice commands, Function to calculate max and min]
     type RegexTuple = [RegExp, RegExp, (numbers: [number, number, number]) => [number, number]]

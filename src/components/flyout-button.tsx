@@ -87,8 +87,8 @@ export function FlyoutButton({className, children, name, icon, open, setOpen, di
                              className={`
                              absolute p-4 max-w-full
                              overflow-y-scroll
-                             bg-zinc-950 shadow-2xl rounded-lg 
-                             border border-zinc-900 
+                             bg-zinc-900 shadow-2xl rounded-lg 
+                             border border-zinc-800 
                              transition-opacity ${flyoutVisible ? 'opacity-100' : 'opacity-0'}
                              `}>
                             {children}

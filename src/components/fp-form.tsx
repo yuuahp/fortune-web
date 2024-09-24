@@ -141,7 +141,7 @@ export function FpForm({historyId, ratedCC, setOpen}: {
                                         <p>
                                             {
                                                 choice.points !== undefined &&
-                                                <FpLabel points={choice.points}/>
+                                                <FpLabel className="!bg-zinc-800 !text-zinc-50 border border-zinc-700 mr-2" points={choice.points}/>
                                             }
                                             <span
                                                 className={`font-bold mr-1 text-${accent}-${disabled ? '900' : '500'}`}>
@@ -168,9 +168,9 @@ export function FpForm({historyId, ratedCC, setOpen}: {
                     }/>
                 </RadioGroup>
                 <div className="flex items-center my-4">
-                    <div className="grow bg-zinc-900 h-[1px]"></div>
+                    <div className="grow bg-zinc-900 h-[1px]"/>
                     <FontAwesomeIcon icon={faClover} className="mx-1 text-zinc-900"/>
-                    <div className="grow bg-zinc-900 h-[1px]"></div>
+                    <div className="grow bg-zinc-900 h-[1px]"/>
                 </div>
                 {/*TODO: import characters*/}
                 <p className="mb-4">

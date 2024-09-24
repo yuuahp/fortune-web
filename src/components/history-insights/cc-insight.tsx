@@ -16,7 +16,7 @@ export function CCInsight({entry, cc, closeButton}: {
 }) {
 
     const ratedCC = getRatedCC(cc)
-    const pushCC = entry.push ? getRatedCCOf(entry.command, entry.push) : undefined
+    const pushCC = entry.push ? getRatedCCOf(entry.command, entry.push.text) : undefined
     const fpApplied = (ratedCC && entry.fortune) ? applyFP(ratedCC, entry.fortune) : undefined
     const effectiveCC = pushCC || fpApplied || ratedCC || cc
 
@@ -54,7 +54,7 @@ export function CCInsight({entry, cc, closeButton}: {
                         {
                             entry.fortune &&
                             <span className="flex items-center">
-                                        <FpLabel points={entry.fortune} icon={faClover}/>
+                                        <FpLabel className="mr-2" points={entry.fortune} icon={faClover}/>
                                         を消費しました
                                     </span>
                         }

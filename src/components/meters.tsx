@@ -110,20 +110,20 @@ export function Meter(
                 style={{left: `calc(${meterLeft}% - 0.5rem)`}}>
             </div>
             <div data-name="critical or min"
-                 className="w-4 rounded-l-full bg-yellow-900"></div>
+                 className="w-4 rounded-l-full bg-yellow-900"/>
             {
                 accentRangeWidth > 0 &&
                 <div className={`h-full transition-all min-w-2 bg-${leftRangeColor}-800`}
-                     style={{width: `calc(${accentRangeWidth}% - 1rem)`}}></div>
+                     style={{width: `calc(${accentRangeWidth}% - 1rem)`}}/>
             }
             {
                 (normalRangeWidth && (normalRangeWidth > 0))
                     ? <div className={`h-full transition-all min-w-2 bg-${rightRangeColor}-800`}
-                           style={{width: `calc(${normalRangeWidth}% - 1rem)`}}></div>
+                           style={{width: `calc(${normalRangeWidth}% - 1rem)`}}/>
                     : undefined
             }
             <div data-name="fumble or max"
-                 className="w-4 rounded-r-full bg-red-900"></div>
+                 className="w-4 rounded-r-full bg-red-900"/>
         </div>
     )
 }
