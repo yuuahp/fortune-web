@@ -13,6 +13,8 @@ import {store} from "@/stores/store";
 import {addHistory, selectHistory, toggleActive} from "@/stores/history-slice";
 import {lastOf} from "@/libs/utils";
 import {HistoryScrollContext} from "@/app/contexts";
+import {Settings} from "@/components/side-page/settings";
+import {CharaSheet} from "@/components/side-page/chara-sheet";
 
 const darkTheme = createTheme({
     palette: {
@@ -34,22 +36,22 @@ export function Main() {
     const dispatch = useDispatch()
 
     const {fetchRoll} = useBCDiceRoll({
-        onSuccess: result => {
+        onSuccess: (command, result) => {
             errorPreviously.current = false
 
             const newEntry: HistoryEntry = {
                 id: uuidv6(),
                 active: true,
                 activeFixed: false,
-                command: diceCommand.current,
+                command: command,
                 result: result
             }
 
             dispatch(addHistory(newEntry))
         },
-        onBCDiceError: error => {
+        onBCDiceError: (command, error) => {
             errorPreviously.current = true
-            errorMessage.current = `${diceCommand.current} - ${error.reason}`
+            errorMessage.current = `${command} - ${error.reason}`
         },
         onTypeError: () => {
             errorPreviously.current = true
@@ -88,6 +90,23 @@ export function Main() {
             behavior: "instant"
         })
     }, [history.length])
+
+    type SidePageId = "settings" | "chara-sheet" | "scenario"
+
+    const [sidePage, setSidePage] = useState<SidePageId>("chara-sheet")
+
+    function SideTab({id, name}: { id: SidePageId, name: string }) {
+        return (
+            <div className={`
+                font-bold cursor-pointer select-none 
+                hover:text-zinc-200 active:text-zinc-50 active:scale-95 transition-all 
+                ${sidePage === id ? "text-zinc-50" : "text-zinc-500"}
+            `}
+                 onClick={() => setSidePage(id)}>
+                {name}
+            </div>
+        )
+    }
 
     return (
         <ThemeProvider theme={darkTheme}>
@@ -158,7 +177,25 @@ export function Main() {
                 <div className="
                     w-full md:w-1/2 h-1/2 md:h-full p-4
                     bg-zinc-900 rounded-2xl border border-zinc-800
+                    flex flex-col gap-y-4
                 ">
+                    <div className="flex justify-start gap-x-4 px-4">
+                        <SideTab id="chara-sheet" name="キャラシート"/>
+                        <SideTab id="scenario" name="シナリオ"/>
+                        <SideTab id="settings" name="設定"/>
+                    </div>
+                    <div className="grow overflow-y-scroll">
+                        {(() => {
+                            switch (sidePage) {
+                                case "chara-sheet":
+                                    return <CharaSheet/>
+                                case "scenario":
+                                    return <div>シナリオ</div>
+                                case "settings":
+                                    return <Settings/>
+                            }
+                        })()}
+                    </div>
                 </div>
             </main>
         </ThemeProvider>

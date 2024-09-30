@@ -62,7 +62,7 @@ export function FlyoutButton({className, children, name, icon, open, setOpen, di
     }
 
     return (
-        <div className={`${className}`}>
+        <div className={`${className} relative`}>
             <div ref={buttonRef}
                  className={`
                  group/fp-button bg-zinc-800 ${!disabled && 'cursor-pointer hover:bg-zinc-700 active:mr-1'}
@@ -81,7 +81,7 @@ export function FlyoutButton({className, children, name, icon, open, setOpen, di
             {
                 open &&
                 <div onClick={() => setOpen(false)}
-                     className="fixed z-10 w-screen h-screen p-2 top-0 left-0">
+                     className="fixed z-10 w-screen h-screen p-2 top-0 left-0 bottom-0 right-0">
                     <div ref={boundaryRef} className="relative w-full h-full">
                         <div ref={flyoutRef} style={flyoutStyles} onClick={event => event.stopPropagation()}
                              className={`

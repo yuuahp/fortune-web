@@ -24,11 +24,11 @@ export function PushForm({historyId, setOpen}: {
     const [errorMessage, setErrorMessage] = useState("")
 
     const {fetchRoll} = useBCDiceRoll({
-        onSuccess: (result) => {
+        onSuccess: (_, result) => {
             setErrorOccurred(false)
             dispatch(addPush({id: entry.id, push: result}))
         },
-        onBCDiceError: (error) => {
+        onBCDiceError: (_, error) => {
             setErrorOccurred(true)
             setErrorMessage(`${error.reason}`)
         },

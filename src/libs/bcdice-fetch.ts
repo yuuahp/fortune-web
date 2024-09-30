@@ -5,28 +5,33 @@ import {RootState} from "@/stores/store";
 export const fetcher = (
     url: string,
     {arg}: { arg: string }
-) => fetch(`${url}?command=${encodeURIComponent(arg)}`).then(res => res.json())
+) => fetch(`${url}?command=${encodeURIComponent(arg)}`)
+    .then(res => res.json())
+    .then(data => ({
+        command: arg,
+        response: data
+    }))
 
 export function useBCDiceRoll({onSuccess, onBCDiceError, onTypeError, onFetchError, anyway}: {
-    onSuccess: (result: BCDiceResult) => void,
-    onBCDiceError: (error: BCDiceError) => void,
+    onSuccess: (command: string, result: BCDiceResult) => void,
+    onBCDiceError: (command: string, error: BCDiceError) => void,
     onTypeError: () => void,
     onFetchError: () => void,
     anyway?: () => void
 }) {
-    const base = useSelector((state: RootState) => state.bcdice.base)
-    const game = useSelector((state: RootState) => state.bcdice.game)
+    const {base, game} = useSelector((state: RootState) => state.bcdice)
 
     const {
-        trigger
-    } = useSWRMutation<BCDiceResponse>(
+        trigger,
+        isMutating
+    } = useSWRMutation<{ command: string, response: BCDiceResponse }>(
         `${base}/v2/game_system/${game}/roll`,
         fetcher, {
             onSuccess: data => {
-                if (isBCDiceResult(data)) {
-                    onSuccess(data)
-                } else if (isBCDiceError(data)) {
-                    onBCDiceError(data)
+                if (isBCDiceResult(data.response)) {
+                    onSuccess(data.command, data.response)
+                } else if (isBCDiceError(data.response)) {
+                    onBCDiceError(data.command, data.response)
                 } else {
                     onTypeError()
                 }
@@ -45,7 +50,8 @@ export function useBCDiceRoll({onSuccess, onBCDiceError, onTypeError, onFetchErr
     const fetchRoll = (command: string) => trigger(command).then()
 
     return {
-        fetchRoll
+        fetchRoll,
+        isMutating
     }
 }
 

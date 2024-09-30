@@ -1,11 +1,13 @@
 import {configureStore} from "@reduxjs/toolkit";
 import historySlice from "@/stores/history-slice";
 import bcdiceSlice from "@/stores/bcdice-slice";
+import charaSlice from "@/stores/chara-slice";
 
 export const store = configureStore({
     reducer: {
         history: historySlice,
-        bcdice: bcdiceSlice
+        bcdice: bcdiceSlice,
+        chara: charaSlice
     }
 })
 

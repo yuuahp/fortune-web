@@ -93,7 +93,7 @@ export function getD(command: string, result: BCDiceResult): D | undefined {
             break
     }
 
-    if (!allRegex.some(([regex]) => regex.test(command))) return undefined;
+    if (!allRegex.some(([regex]) => regex.test(formattedCommand))) return undefined;
 
     let maxCommand = diceCommand;
     let minCommand = diceCommand;

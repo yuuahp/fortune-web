@@ -11,6 +11,9 @@ const config: Config = {
         {
             pattern: /(border|text|bg)-(yellow|violet|sky|green|zinc|red)-*/
         }
-    ]
+    ],
+    plugins: [
+        require("@tailwindcss/container-queries")
+    ],
 };
 export default config;
