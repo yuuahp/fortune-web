@@ -1,8 +1,8 @@
 import {createSlice} from "@reduxjs/toolkit";
-import {Chara} from "@/libs/chara";
+import {Investigator} from "@/libs/investigator";
 
 export type CharaState = {
-    characters: Chara[]
+    characters: Investigator[]
     draft: any
 }
 
@@ -15,13 +15,13 @@ const charaSlice = createSlice({
     name: "chara",
     initialState,
     reducers: {
-        addChara(state, {payload}: { payload: Chara }) {
+        addChara(state, {payload}: { payload: Investigator }) {
             state.characters = [...state.characters, payload]
         },
         removeChara(state, {payload}: { payload: string }) {
             state.characters = state.characters.filter(it => it.id !== payload)
         },
-        updateChara(state, {payload}: { payload: Chara }) {
+        updateChara(state, {payload}: { payload: Investigator }) {
             state.characters = state.characters.map(it => it.id === payload.id ? payload : it)
         },
         setDraft(state, {payload}: { payload: any }) {

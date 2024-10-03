@@ -29,17 +29,12 @@ import {IconDefinition} from "@fortawesome/fontawesome-svg-core";
 import {isBCDiceResult} from "@/libs/bcdice-fetch";
 import {getD} from "@/libs/commands/sum-dices";
 import {
-    actionSkills,
-    combatSkills,
-    communicationSkills,
-    investigationSkills,
-    knowledgeSkills,
     Skill,
     SkillInfo,
-    skills,
-    SkillType
-} from "@/libs/chara";
+    SkillCategory, InvestigatorSheetDraft
+} from "@/libs/investigator";
 import {SkillCategoryEditor} from "@/components/investigator-creator-lib";
+import {Skills} from "@/libs/investigator/skills";
 
 function InfoTextField({label, icon, fullWidth, property, data, setData}: {
     label: string,
@@ -108,7 +103,7 @@ const params = [
 ]
 
 export function InvestigatorCreator() {
-    const [data, setData] = useState<any>({
+    const [data, setData] = useState<InvestigatorSheetDraft>({
         name: undefined,
         read: undefined,
         profession: undefined,
@@ -118,18 +113,20 @@ export function InvestigatorCreator() {
         origin: undefined,
         status: [],
         params: [],
-        skills: [...skills.map(({name, rateBase, type}): Skill => {
+        skills: [...Skills.all.map(({name, rateBase, category}): Skill => {
             return {
                 added: false,
                 name,
-                type,
+                category: category,
                 rateBase,
                 rateProfession: 0,
                 rateInterest: 0,
                 rateGrowth: 0,
                 rateOther: 0
             }
-        })]
+        })],
+        commands:[],
+        icons:[]
     })
 
     const [paramRollError, setParamRollError] = useState<string | undefined>(undefined)
@@ -206,8 +203,7 @@ export function InvestigatorCreator() {
             })
 
             Promise.all(newParams).then((newParams) => {
-                console.log(newParams)
-                const newData = {...data, params: newParams}
+                const newData = {...data, params: newParams.filter(it => it !== undefined)}
                 setData(newData)
             })
         }}>
@@ -221,7 +217,7 @@ export function InvestigatorCreator() {
         <div className="grid grid-cols-2 @md:grid-cols-3 @lg:grid-cols-4 gap-2 overflow-hidden rounded-xl mb-4">
             {
                 params.map(({label, icon}) => {
-                    return <div className="rounded-md p-2 bg-zinc-800">
+                    return <div className="rounded-md p-2 bg-zinc-800" key={label}>
                         <div className="flex justify-between mb-2 pl-1">
                             <p className="text-lg font-bold text-nowrap">
                                 <FontAwesomeIcon icon={icon} className="mr-2 aspect-square"/>{label}
@@ -266,7 +262,7 @@ export function InvestigatorCreator() {
                         equalTo: "= 3D6 * 5"
                     }
                 ].map(({label, icon, equalTo}) => {
-                    return <div className="rounded-md p-2 pt-1 bg-zinc-800">
+                    return <div className="rounded-md p-2 pt-1 bg-zinc-800" key={label}>
                         <div className="flex justify-between items-end">
                             <p className="text-lg font-bold pl-1 text-nowrap">
                                 <FontAwesomeIcon icon={icon} className="mr-2 aspect-square"/>{label}
@@ -283,12 +279,12 @@ export function InvestigatorCreator() {
         <div className="flex flex-col gap-y-4">
             {
                 ([
-                    {icon: faHandFist, name: "戦闘技能", type: "combat", skillInfo: combatSkills},
-                    {icon: faBinoculars, name: "探索技能", type: "investigation", skillInfo: investigationSkills},
-                    {icon: faPersonRunning, name: "行動技能", type: "action", skillInfo: actionSkills},
-                    {icon: faComments, name: "交渉技能", type: "communication", skillInfo: communicationSkills},
-                    {icon: faBooks, name: "知識技能", type: "knowledge", skillInfo: knowledgeSkills}
-                ] as { icon: IconDefinition, name: string, type: SkillType, skillInfo: SkillInfo[] }[])
+                    {icon: faHandFist, name: "戦闘技能", type: "combat", skillInfo: Skills.combat},
+                    {icon: faBinoculars, name: "探索技能", type: "investigation", skillInfo: Skills.investigation},
+                    {icon: faPersonRunning, name: "行動技能", type: "action", skillInfo: Skills.action},
+                    {icon: faComments, name: "交渉技能", type: "communication", skillInfo: Skills.communication},
+                    {icon: faBooks, name: "知識技能", type: "knowledge", skillInfo: Skills.knowledge}
+                ] as { icon: IconDefinition, name: string, type: SkillCategory, skillInfo: SkillInfo[] }[])
                     .map(({icon, name, type, skillInfo}) => (
                         <SkillCategoryEditor
                             key={type}

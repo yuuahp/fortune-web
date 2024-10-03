@@ -1,9 +1,10 @@
-import {Skill, SkillInfo, skills, SkillType} from "@/libs/chara";
+import {Skill, SkillInfo, SkillCategory} from "@/libs/investigator";
 import {TextField} from "@mui/material";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faEquals, faPlusCircle} from "@awesome.me/kit-ae9e2bd1c8/icons/classic/solid";
 import {useState} from "react";
 import {IconDefinition} from "@fortawesome/fontawesome-svg-core";
+import {Skills} from "@/libs/investigator/skills";
 
 export type SkillPointType = "profession" | "interest" | "growth" | "other"
 
@@ -46,7 +47,7 @@ export function SkillPointInput({className, rate, type, data, setData, name}: {
 export function SkillCategoryEditor({icon, name, type, skillInfo, data, setData}: {
     icon: IconDefinition,
     name: string,
-    type: SkillType,
+    type: SkillCategory,
     skillInfo: SkillInfo[],
     data: any,
     setData: (data: any) => void
@@ -65,12 +66,12 @@ export function SkillCategoryEditor({icon, name, type, skillInfo, data, setData}
                  onClick={() => {
                      if (skillsDelta === undefined)
                          setSkillsDelta(data.skills
-                             .filter((it: Skill) => it.type === type && it.added)
+                             .filter((it: Skill) => it.category === type && it.added)
                              .map((it: Skill) => it.name))
                      else {
                          const newSkills: Skill[] = data.skills
                              .map((it: Skill): Skill => {
-                                 if (it.type === type) return ({
+                                 if (it.category === type) return ({
                                      ...it,
                                      added: skillsDelta.includes(it.name)
                                  })
@@ -99,9 +100,9 @@ export function SkillCategoryEditor({icon, name, type, skillInfo, data, setData}
                             <p className={`text-nowrap truncate w-24`}>{name}</p>
                         </div>
                     })
-                    : data.skills.filter((it: Skill) => it.added && it.type === type)
+                    : data.skills.filter((it: Skill) => it.added && it.category === type)
                         .map(({name, rateBase, rateProfession, rateInterest, rateGrowth, rateOther}: Skill) => {
-                            const skillInfo = skills.find(it => it.name === name)!!
+                            const skillInfo = Skills.all.find(it => it.name === name)!!
 
                             const otherCommand = typeof rateOther === "string"
 
