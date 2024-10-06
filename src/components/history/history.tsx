@@ -1,13 +1,13 @@
 import {HistoryEntry} from "@/libs/history";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCaretRight, faClover} from "@awesome.me/kit-ae9e2bd1c8/icons/classic/solid";
-import {HistoryInsight} from "@/components/history-insight";
+import {HistoryInsight} from "@/components/history/history-insight";
 import {getD} from "@/libs/commands/sum-dices";
 import {applyFP, getCC, getLevelDetail, getRatedCC} from "@/libs/commands/cc";
 import {getChoice} from "@/libs/commands/choice";
 import {getRepeat} from "@/libs/commands/repeat";
-import {CCRichText, TextsDisplay} from "@/components/history-texts";
-import {FpLabel} from "@/components/fp-label";
+import {CCRichText, TextsDisplay} from "@/components/history/history-texts";
+import {FpLabel} from "@/components/history/fp-label";
 
 export function History({entry, toggleActive, lessRoundedTop, lessRoundedBottom}: {
     entry: HistoryEntry,

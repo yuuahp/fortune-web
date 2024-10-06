@@ -2,7 +2,7 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faAddressBook, faChessPawn, faFileImport, faScrollOld} from "@awesome.me/kit-ae9e2bd1c8/icons/classic/solid";
 import {IconDefinition} from "@fortawesome/fontawesome-svg-core";
 import {useState} from "react";
-import {InvestigatorCreator} from "@/components/investigator-creator";
+import {InvestigatorCreator} from "@/components/investigator-creator/investigator-creator";
 
 function NewCharaSelect({className, title, subtitle, icon, onClick}: {
     className?: string,

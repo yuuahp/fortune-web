@@ -4,7 +4,7 @@ import {addPush, getHistoryById} from "@/stores/history-slice";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faBomb} from "@awesome.me/kit-ae9e2bd1c8/icons/classic/solid";
 import {Button} from "@mui/material";
-import {useBCDiceRoll} from "@/libs/bcdice-fetch";
+import {useBCDiceSWR} from "@/libs/bcdice-fetch";
 import {useState} from "react";
 
 export function PushForm({historyId, setOpen}: {
@@ -23,7 +23,7 @@ export function PushForm({historyId, setOpen}: {
     const [errorOccurred, setErrorOccurred] = useState(false)
     const [errorMessage, setErrorMessage] = useState("")
 
-    const {fetchRoll} = useBCDiceRoll({
+    const {fetchRoll} = useBCDiceSWR({
         onSuccess: (_, result) => {
             setErrorOccurred(false)
             dispatch(addPush({id: entry.id, push: result}))

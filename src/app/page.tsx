@@ -4,9 +4,9 @@ import {createTheme, CssBaseline, IconButton, InputAdornment, TextField, ThemePr
 import {ChangeEvent, useEffect, useRef, useState} from "react";
 import {faPaperPlane, faRotate} from "@awesome.me/kit-ae9e2bd1c8/icons/classic/solid";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {useBCDiceRoll} from "@/libs/bcdice-fetch";
+import {useBCDiceSWR} from "@/libs/bcdice-fetch";
 import {HistoryEntry} from "@/libs/history";
-import {History} from "@/components/history";
+import {History} from "@/components/history/history";
 import {v6 as uuidv6} from 'uuid';
 import {Provider, useDispatch, useSelector} from "react-redux";
 import {store} from "@/stores/store";
@@ -35,7 +35,7 @@ export function Main() {
 
     const dispatch = useDispatch()
 
-    const {fetchRoll} = useBCDiceRoll({
+    const {fetchRoll} = useBCDiceSWR({
         onSuccess: (command, result) => {
             errorPreviously.current = false
 

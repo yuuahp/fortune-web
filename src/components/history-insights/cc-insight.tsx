@@ -1,9 +1,9 @@
-import {CCMeter} from "@/components/meters";
+import {CCMeter} from "@/components/history/meters";
 import {FlyoutButton} from "@/components/flyout-button";
 import {faBomb, faClover} from "@awesome.me/kit-ae9e2bd1c8/icons/classic/solid";
-import {FpForm} from "@/components/fp-form";
-import {PushForm} from "@/components/push-form";
-import {FpLabel} from "@/components/fp-label";
+import {FpForm} from "@/components/history/fp-form";
+import {PushForm} from "@/components/history/push-form";
+import {FpLabel} from "@/components/history/fp-label";
 import {HistoryEntry} from "@/libs/history";
 import React, {ReactElement, useState} from "react";
 import {PrimaryValue} from "@/components/history-insights/insight-components";

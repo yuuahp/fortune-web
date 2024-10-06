@@ -1,6 +1,7 @@
 import useSWRMutation from "swr/mutation";
 import {useSelector} from "react-redux";
 import {RootState} from "@/stores/store";
+import {D, getD} from "@/libs/commands/sum-dices";
 
 export const fetcher = (
     url: string,
@@ -12,7 +13,7 @@ export const fetcher = (
         response: data
     }))
 
-export function useBCDiceRoll({onSuccess, onBCDiceError, onTypeError, onFetchError, anyway}: {
+export function useBCDiceSWR({onSuccess, onBCDiceError, onTypeError, onFetchError, anyway}: {
     onSuccess: (command: string, result: BCDiceResult) => void,
     onBCDiceError: (command: string, error: BCDiceError) => void,
     onTypeError: () => void,
@@ -53,6 +54,23 @@ export function useBCDiceRoll({onSuccess, onBCDiceError, onTypeError, onFetchErr
         fetchRoll,
         isMutating
     }
+}
+
+export async function fetchBCDice(base: string, game: string, command: string): Promise<BCDiceResult | BCDiceError | undefined> {
+    const response = await fetch(`${base}/v2/game_system/${game}/roll?command=${encodeURIComponent(command)}`)
+
+    if (!response.ok) return undefined
+
+    return await response.json()
+}
+
+export async function fetchD(base: string, game: string, dCommand: string): Promise<D | undefined> {
+    const response = await fetchBCDice(base, game, dCommand)
+    if (response === undefined) return undefined
+
+    if (isBCDiceResult(response)) {
+        return getD(dCommand, response)
+    } else return undefined
 }
 
 export type BCDiceResponse = {

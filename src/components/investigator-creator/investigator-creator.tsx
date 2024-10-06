@@ -1,16 +1,13 @@
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {Button, IconButton, InputAdornment, TextField} from "@mui/material";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {
-    faBinoculars,
-    faBooks,
     faBookSparkles,
     faBriefcase,
     faCalendarDay,
     faCameraRetro,
     faCircleInfo,
     faClover,
-    faComments,
     faFaceSmile,
     faGlobeStand,
     faHandFist,
@@ -19,30 +16,26 @@ import {
     faHeartPulse,
     faHouseUser,
     faPersonFallingBurst,
-    faPersonRunning,
     faPersonRunningFast,
     faRulerVertical,
     faUser,
     faUserGraduate
 } from "@awesome.me/kit-ae9e2bd1c8/icons/classic/solid";
 import {IconDefinition} from "@fortawesome/fontawesome-svg-core";
-import {isBCDiceResult} from "@/libs/bcdice-fetch";
-import {getD} from "@/libs/commands/sum-dices";
-import {
-    Skill,
-    SkillInfo,
-    SkillCategory, InvestigatorSheetDraft
-} from "@/libs/investigator";
-import {SkillCategoryEditor} from "@/components/investigator-creator-lib";
+import {fetchD} from "@/libs/bcdice-fetch";
+import {getParam, InvestigatorSheetDraft, Skill} from "@/libs/investigator";
 import {Skills} from "@/libs/investigator/skills";
+import {SkillsSection} from "@/components/investigator-creator/sections";
+import {useSelector} from "react-redux";
+import {RootState} from "@/stores/store";
 
 function InfoTextField({label, icon, fullWidth, property, data, setData}: {
     label: string,
     icon: IconDefinition,
     fullWidth?: boolean,
-    property: string,
-    data: any,
-    setData: (data: any) => void
+    property: keyof InvestigatorSheetDraft,
+    data: InvestigatorSheetDraft,
+    setData: (data: InvestigatorSheetDraft) => void
 }) {
     return <TextField label={label} size="small" fullWidth={fullWidth}
                       InputProps={icon && {
@@ -54,7 +47,7 @@ function InfoTextField({label, icon, fullWidth, property, data, setData}: {
                       onChange={event => {
                           const value = event.target.value
                           const newData = {...data}
-                          newData[property] = value === "" ? undefined : value
+                          newData[property] = (value === "" ? undefined : value) as never
                           setData(newData)
                       }}/>
 }
@@ -125,8 +118,8 @@ export function InvestigatorCreator() {
                 rateOther: 0
             }
         })],
-        commands:[],
-        icons:[]
+        commands: [],
+        icons: []
     })
 
     const [paramRollError, setParamRollError] = useState<string | undefined>(undefined)
@@ -144,11 +137,23 @@ export function InvestigatorCreator() {
         setData(newData)
     }
 
+    const {base, game} = useSelector((state: RootState) => state.bcdice);
+
+    const [fortuneValue, setFortuneValue] = useState<number | undefined>(undefined)
+
+    function fetchFortune() {
+        fetchD(base, game, "3D6").then(d => setFortuneValue(d ? d.value * 5 : undefined))
+    }
+
+    useEffect(() => {
+        fetchFortune()
+    }, []);
+
     return <div className="@container">
         <h1 className="text-2xl font-bold mb-4">探索者作成</h1>
-        <div>
-            {JSON.stringify(data)}
-        </div>
+        {/*<div>*/}
+        {/*    {JSON.stringify(data)}*/}
+        {/*</div>*/}
         <div className="flex gap-x-4 mb-4">
             <div
                 className="w-36 h-48 bg-zinc-800 rounded-xl flex flex-col justify-center items-center gap-y-2 relative">
@@ -187,19 +192,11 @@ export function InvestigatorCreator() {
         </div>
         <Button onClick={() => {
             const newParams = params.map(async ({label, command}) => {
-                const data = await (await fetch(`https://bcdice.onlinesession.app/v2/game_system/Cthulhu7th/roll?command=${encodeURIComponent(command)}`)).json()
+                const d = await fetchD(base, game, command)
 
-                if (isBCDiceResult(data)) {
-                    const d = getD(command, data)
-                    if (d === undefined) {
-                        setParamRollError("Unknown Error")
-                        return undefined
-                    }
-
+                if (d) {
                     return {name: label, value: d.value * 5}
-                }
-
-                return undefined
+                } else return undefined
             })
 
             Promise.all(newParams).then((newParams) => {
@@ -240,64 +237,62 @@ export function InvestigatorCreator() {
         </div>
         <div className="grid grid-cols-2 @lg:grid-cols-4 gap-2 overflow-hidden rounded-xl mb-4">
             {
-                [
-                    {
-                        label: "HP",
-                        icon: faHeartPulse,
-                        equalTo: "= (SIZ + CON) / 10"
-                    },
-                    {
-                        label: "MP",
-                        icon: faBookSparkles,
-                        equalTo: "= POW/5"
-                    },
-                    {
-                        label: "SAN",
-                        icon: faHeadSideBrain,
-                        equalTo: "= POW"
-                    },
-                    {
-                        label: "幸運",
-                        icon: faClover,
-                        equalTo: "= 3D6 * 5"
-                    }
-                ].map(({label, icon, equalTo}) => {
-                    return <div className="rounded-md p-2 pt-1 bg-zinc-800" key={label}>
-                        <div className="flex justify-between items-end">
-                            <p className="text-lg font-bold pl-1 text-nowrap">
-                                <FontAwesomeIcon icon={icon} className="mr-2 aspect-square"/>{label}
-                            </p>
-                            <p className="font-black text-3xl">
-                                12
-                            </p>
-                        </div>
-                        <p className="text-zinc-500 text-xs">{equalTo}</p>
+                [{
+                    label: "HP",
+                    icon: faHeartPulse,
+                    equalTo: "= (SIZ + CON) / 10",
+                    formula: (() => {
+                        const siz = getParam(data, "SIZ")
+                        const con = getParam(data, "CON")
+                        if (siz === undefined || con === undefined) return undefined
+                        return Math.floor((siz + con) / 10)
+                    })()
+                }, {
+                    label: "MP",
+                    icon: faBookSparkles,
+                    equalTo: "= POW/5",
+                    formula: (() => {
+                        const pow = getParam(data, "POW")
+                        return pow !== undefined ? pow / 5 : undefined
+                    })()
+                }, {
+                    label: "SAN",
+                    icon: faHeadSideBrain,
+                    equalTo: "= POW",
+                    formula: getParam(data, "POW")
+                }, {
+                    label: "幸運",
+                    icon: faClover,
+                    equalTo: "= 3D6 * 5",
+                    formula: fortuneValue
+                }].map(({label, icon, equalTo, formula}: {
+                    label: string,
+                    icon: IconDefinition,
+                    equalTo: string,
+                    formula: number | undefined
+                }) => <div className="rounded-md p-2 pt-1 bg-zinc-800" key={label}>
+                    <div className="flex justify-between items-end">
+                        <p className="text-lg font-bold pl-1 text-nowrap">
+                            <FontAwesomeIcon icon={icon} className="mr-2 aspect-square"/>{label}
+                        </p>
+                        <p className="font-black text-3xl">{formula ?? "##"}</p>
                     </div>
-                })
-            }
-        </div>
-        <div className="flex flex-col gap-y-4">
-            {
-                ([
-                    {icon: faHandFist, name: "戦闘技能", type: "combat", skillInfo: Skills.combat},
-                    {icon: faBinoculars, name: "探索技能", type: "investigation", skillInfo: Skills.investigation},
-                    {icon: faPersonRunning, name: "行動技能", type: "action", skillInfo: Skills.action},
-                    {icon: faComments, name: "交渉技能", type: "communication", skillInfo: Skills.communication},
-                    {icon: faBooks, name: "知識技能", type: "knowledge", skillInfo: Skills.knowledge}
-                ] as { icon: IconDefinition, name: string, type: SkillCategory, skillInfo: SkillInfo[] }[])
-                    .map(({icon, name, type, skillInfo}) => (
-                        <SkillCategoryEditor
-                            key={type}
-                            icon={icon}
-                            name={name}
-                            type={type}
-                            skillInfo={skillInfo}
-                            data={data}
-                            setData={setData}
-                        />
-                    ))
-            }
-        </div>
+                    <div className="flex justify-between flex-wrap gap-1">
+                        <p className="text-zinc-500 text-xs">{equalTo}</p>
+                        {
+                            label === "幸運" &&
+                            <div onClick={fetchFortune}
+                                 className="
+                                 bg-blue-300 text-zinc-800 font-bold rounded-full text-xs px-2 cursor-pointer select-none
+                                 ">
+                                ランダム
+                            </div>
+                        }
+                    </div>
 
+                </div>)
+            }
+        </div>
+        <SkillsSection data={data} setData={setData}/>
     </div>
 }

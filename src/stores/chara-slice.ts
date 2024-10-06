@@ -1,5 +1,5 @@
 import {createSlice} from "@reduxjs/toolkit";
-import {Investigator} from "@/libs/investigator";
+import {Investigator, InvestigatorSheetDraft} from "@/libs/investigator";
 
 export type CharaState = {
     characters: Investigator[]
@@ -24,7 +24,7 @@ const charaSlice = createSlice({
         updateChara(state, {payload}: { payload: Investigator }) {
             state.characters = state.characters.map(it => it.id === payload.id ? payload : it)
         },
-        setDraft(state, {payload}: { payload: any }) {
+        setDraft(state, {payload}: { payload: InvestigatorSheetDraft }) {
             state.draft = payload
         },
         clearDraft(state) {

@@ -1,4 +1,4 @@
-import {DMeter} from "@/components/meters";
+import {DMeter} from "@/components/history/meters";
 import {PrimaryValue} from "@/components/history-insights/insight-components";
 import {ReactElement} from "react";
 import {D} from "@/libs/commands/sum-dices";

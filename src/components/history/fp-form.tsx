@@ -5,7 +5,7 @@ import {useDispatch, useSelector} from "react-redux";
 import {addFortune, getHistoryById} from "@/stores/history-slice";
 import {RootState} from "@/stores/store";
 import {useEffect, useState} from "react";
-import {FpLabel} from "@/components/fp-label";
+import {FpLabel} from "@/components/history/fp-label";
 import {
     CCLevel,
     CCLevelDetail,

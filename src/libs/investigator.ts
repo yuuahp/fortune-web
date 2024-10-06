@@ -49,11 +49,22 @@ export type InvestigatorSheetDraft = {
         name: string
         value: number
     }[]
-    skills: (Skill | SimpleSkill)[]
+    skills: (Skill)[]
     commands: string[]
     externalUrl?: string
     icons: string[]
     memo?: string
+}
+
+export function getParam(sheet: InvestigatorSheet | InvestigatorSheetDraft, name: string): number | undefined {
+    return sheet.params.find(it => it.name === name)?.value
+}
+
+export function getSkillSum(sheet: InvestigatorSheet | InvestigatorSheetDraft, skillName: string): number | undefined {
+    const skill = sheet.skills.find(it => it.name === skillName)
+    if (!skill) return undefined
+    if (!isSkill(skill)) return undefined
+    return skill.rateBase + skill.rateProfession + skill.rateInterest + skill.rateGrowth + (typeof skill.rateOther === "number" ? skill.rateOther : 0)
 }
 
 export type Investigator = {
@@ -94,6 +105,20 @@ export type Skill = {
     category: SkillCategory
 }
 
+export function isSkill(obj: any): obj is Skill {
+    return typeof obj === 'object' &&
+        typeof obj.added === 'boolean' &&
+        typeof obj.name === 'string' &&
+        (typeof obj.branch === 'undefined' || typeof obj.branch === 'string') &&
+        typeof obj.rateBase === 'number' &&
+        typeof obj.rateProfession === 'number' &&
+        typeof obj.rateInterest === 'number' &&
+        typeof obj.rateGrowth === 'number' &&
+        (typeof obj.rateOther === 'number' || typeof obj.rateOther === 'string') &&
+        typeof obj.category === 'string' &&
+        ['combat', 'investigation', 'communication', 'knowledge', 'action', 'other'].includes(obj.category);
+}
+
 export type SkillInfo = {
     name: string
     branches?: ([string, number] | string)[]
@@ -102,6 +127,15 @@ export type SkillInfo = {
     icon: IconDefinition
 }
 
+export function isSkillInfo(obj: any): obj is SkillInfo {
+    return typeof obj === 'object' &&
+        typeof obj.name === 'string' &&
+        (typeof obj.branches === 'undefined' || Array.isArray(obj.branches)) &&
+        typeof obj.rateBase === 'number' &&
+        typeof obj.category === 'string' &&
+        ['combat', 'investigation', 'communication', 'knowledge', 'action', 'other'].includes(obj.category) &&
+        typeof obj.icon === 'object' && obj.icon !== null;
+}
 
 export type CCFoliaPiece = {
     kind: "character"
