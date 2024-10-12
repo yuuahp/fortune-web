@@ -8,7 +8,7 @@ import {LayoutGroup, motion} from "framer-motion";
 import Draggable from 'react-draggable';
 import {IconDefinition} from "@fortawesome/fontawesome-svg-core";
 
-export type SkillPointType = "profession" | "interest" | "growth" | "other"
+export type SkillPointType = "base" | "profession" | "interest" | "growth" | "other"
 
 export function SkillPointInput({className, rate, type, data, setData, name}: {
     className?: string,
@@ -21,6 +21,8 @@ export function SkillPointInput({className, rate, type, data, setData, name}: {
 
     const [typeJP, key] = (() => {
         switch (type) {
+            case "base":
+                return ["初期値", "rateBase"]
             case "profession":
                 return ["職業", "rateProfession"]
             case "interest":
@@ -46,38 +48,83 @@ export function SkillPointInput({className, rate, type, data, setData, name}: {
                       }}/>
 }
 
-export function SkillSlider({rates, onRateChange}: {
-    rates: { base: number, profession: number, interest: number, growth: number, other: number },
-    onRateChange: (rates: { profession: number, interest: number }) => void
+function getColor(type: SkillPointType, includeHover: boolean) {
+    switch (type) {
+        case "base":
+            return 'bg-zinc-200 ' + (includeHover && 'hover:bg-zinc-300')
+        case "profession":
+            return 'bg-blue-300 ' + (includeHover && 'hover:bg-blue-400')
+        case "interest":
+            return 'bg-orange-300 ' + (includeHover && 'hover:bg-orange-400')
+        case "growth":
+            return 'bg-green-300 ' + (includeHover && 'hover:bg-green-400')
+        case "other":
+            return 'bg-red-300 ' + (includeHover && 'hover:bg-red-400')
+    }
+}
+
+function PointBlock({ranges, clickAllowed, onClick}: {
+    ranges: [SkillPointType, number][],
+    clickAllowed: [boolean, boolean],
+    onClick: [() => void, () => void]
+}) {
+    const mutableRanges = [...ranges]
+    const firstHalfRange: [SkillPointType, number][] = []
+    const secondHalfRange: [SkillPointType, number][] = []
+
+    const firstHalfSum = () => firstHalfRange
+        .map(it => it[1])
+        .reduce((a, b) => a + b, 0)
+
+    while (mutableRanges.length !== 0) {
+        const [type, points] = mutableRanges.shift()!! // not 0
+
+        if (firstHalfSum() + points <= 5) {
+            firstHalfRange.push([type, points])
+        } else {
+            const pointsLeft = 5 - firstHalfSum()
+            if (pointsLeft !== 0) firstHalfRange.push([type, pointsLeft])
+            secondHalfRange.push([type, points - pointsLeft])
+        }
+    }
+
+    const HalfElement = ({ranges, index}: { ranges: [SkillPointType, number][], index: number }) => (
+        <div
+            onClick={clickAllowed[index] ? onClick[index] : () => {
+            }}
+            className={`cursor-pointer w-1/2 h-full flex bg-zinc-700`}>
+            {
+                ranges.map(([type, points]) => (
+                    <div className={`h-full ${getColor(type, clickAllowed[index])}`}
+                         key={type} style={{width: `${(points / 5) * 100}%`}}/>
+                ))
+            }
+        </div>
+    )
+
+    return <div className="flex w-full h-full">
+        <HalfElement ranges={firstHalfRange} index={0}/>
+        <HalfElement ranges={secondHalfRange} index={1}/>
+    </div>
+}
+
+export function SkillSlider({points, onPointsChange}: {
+    points: { base: number, profession: number, interest: number, growth: number, other: number },
+    onPointsChange: (rates: { profession: number, interest: number }) => void
 }) {
     const allRef = useRef<HTMLDivElement>(null)
-    const [{width, gridX}, setGridX] = useState({width: 0, gridX: 0})
-
-    const [baseBlocks, professionBlocks, interestBlocks, growthBlocks, otherBlocks] =
-        [rates.base / 5, rates.profession / 5, rates.interest / 5, rates.growth / 5, rates.other / 5]
-
-    const pBarPos = {x: (professionBlocks + baseBlocks) * gridX, y: 0}
-    const iBarPos = {x: (interestBlocks + professionBlocks + baseBlocks) * gridX, y: 0}
-
-    const pBlockX = (baseBlocks + professionBlocks)
-    const iBlockX = (baseBlocks + professionBlocks + interestBlocks)
-    const pBlockXMax = 20 - (iBlockX - pBlockX)
+    const [{blockGrid, pointGrid}, setMeasures] = useState({blockGrid: 0, pointGrid: 0})
 
     const pBarRef = useRef(null)
     const iBarRef = useRef(null)
 
-    const piOverlap = pBlockX === iBlockX
+    const piOverlap = points.interest === 0
 
     function updateGridX() {
         const currentWidth = allRef.current?.clientWidth
-        console.log(currentWidth)
         if (currentWidth === undefined) return
 
-        const newGridX = currentWidth / 20
-
-        setGridX({width: currentWidth, gridX: newGridX})
-
-        console.log(pBarPos, iBarPos, currentWidth)
+        setMeasures({blockGrid: currentWidth / 20, pointGrid: currentWidth / 100})
     }
 
     window.onresize = updateGridX
@@ -86,27 +133,37 @@ export function SkillSlider({rates, onRateChange}: {
         updateGridX()
     }, [allRef.current?.clientWidth])
 
-    function getColor(block: number, includeHover: boolean) {
-        if (baseBlocks >= block) return 'bg-zinc-700 ' + (includeHover && 'hover:bg-zinc-600')
-        if (pBlockX >= block) return 'bg-blue-300 ' + (includeHover && 'hover:bg-blue-400')
-        if (iBlockX >= block) return 'bg-orange-300 ' + (includeHover && 'hover:bg-orange-400')
-        else return 'bg-zinc-700 ' + (includeHover && 'hover:bg-zinc-600')
-    }
+    const getRateEntries = () => (Object.entries(points) as [SkillPointType, number][]).filter(it => it[1] !== 0)
+    let rateEntries = getRateEntries()
+
+    useEffect(() => {
+        rateEntries = getRateEntries()
+    }, [points]);
 
     return <div className="h-12 flex items-center">
         <div className="h-4 w-full grid grid-cols-10 gap-x-1 relative" ref={allRef}>
             <Draggable axis="x" handle=".handle" nodeRef={pBarRef}
-                       bounds={{left: baseBlocks * gridX, right: pBlockXMax * gridX}}
-                       positionOffset={{x: "-50%", y: 0}} position={pBarPos}
-                       onDrag={(e, data) => {
-                           console.log(data.x, data.deltaX, gridX, "->", Math.round(data.x / gridX), width, "position", pBarPos)
-                           const newPBlocks = Math.round(data.x / gridX) - baseBlocks
-                           onRateChange({
-                               profession: newPBlocks * 5,
-                               interest: (iBlockX - pBlockX) * 5
+                       bounds={{
+                           left: points.base * pointGrid,
+                           right: (100 - (points.interest + points.growth + points.other)) * pointGrid
+                       }}
+                       positionOffset={{x: "-50%", y: 0}}
+                       defaultPosition={{x: 0, y: 0}}
+                       position={{
+                           x: (points.base + points.profession) * pointGrid, y: 0
+                       }}
+                       onDrag={(_, data) => {
+                           const newProfession = Math.round(data.x / pointGrid) - points.base
+                           const newPointsMod5 = (points.base + newProfession + points.interest) % 5
+
+                           const allowAdjustment = newProfession > 0 && 100 - (points.base + points.profession + points.interest) > 5
+
+                           onPointsChange({
+                               profession: allowAdjustment ? newProfession - newPointsMod5 : newProfession,
+                               interest: points.interest
                            })
                        }}
-                       grid={[gridX, 0]}
+                       grid={[blockGrid, 0]}
                        scale={1}>
                 <div ref={pBarRef}
                      className={`handle absolute z-10 ${piOverlap ? 'h-[calc(1rem+2px)]' : 'h-8 rounded-b-full'} 
@@ -120,16 +177,28 @@ export function SkillSlider({rates, onRateChange}: {
                 </div>
             </Draggable>
             <Draggable axis="x" handle=".handle" nodeRef={iBarRef}
-                       bounds={{left: pBlockX * gridX, right: width}}
-                       positionOffset={{x: "-50%", y: 0}} position={iBarPos}
-                       onDrag={(e, data) => {
-                           console.log(data.x, data.deltaX, gridX, "->", Math.round(data.x / gridX), width, "position", iBarRef)
-                           onRateChange({
-                               profession: (pBlockX - baseBlocks) * 5,
-                               interest: (Math.round(data.x / gridX) - pBlockX) * 5
+                       bounds={{
+                           left: (points.base + points.profession) * pointGrid,
+                           right: (100 - (points.growth + points.other)) * pointGrid
+                       }}
+                       positionOffset={{x: "-50%", y: 0}}
+                       defaultPosition={{x: 0, y: 0}}
+                       position={{
+                           x: (points.base + points.profession + points.interest) * pointGrid,
+                           y: 0
+                       }}
+                       onDrag={(_, data) => {
+                           const newInterest = Math.round(data.x / pointGrid) - points.profession - points.base
+                           const newPointsMod5 = (points.base + points.profession + newInterest) % 5
+
+                           const allowAdjustment = newInterest > 0 && 100 - (points.base + points.profession + points.interest) > 5
+
+                           onPointsChange({
+                               profession: points.profession,
+                               interest: allowAdjustment ? newInterest - newPointsMod5 : newInterest
                            })
                        }}
-                       grid={[gridX, 0]}
+                       grid={[blockGrid, 0]}
                        scale={1}>
                 <div ref={iBarRef}
                      className={`handle absolute z-10 ${piOverlap ? 'h-[calc(1rem+2px)]' : 'h-8 rounded-t-full'} 
@@ -144,36 +213,40 @@ export function SkillSlider({rates, onRateChange}: {
             </Draggable>
             {
                 [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(it => {
-                    const thisMaxPoint = it * 2
-                    const thisMidPoint = thisMaxPoint - 1
+                    let ranges: [SkillPointType, number][] = []
 
-                    const midPoint = pBlockX === thisMidPoint
+                    const getCurrentRangeSum = () => ranges.map(it => it[1]).reduce((a, b) => a + b, 0)
 
-                    function PointBlock({assignedPoint}: { assignedPoint: number }) {
-                        const setAllowed = assignedPoint <= pBlockXMax
+                    const blockFilled = () => getCurrentRangeSum() === 10
 
-                        return <div
-                            onClick={setAllowed ? (() => {
-                                onRateChange({
-                                    profession: (assignedPoint - baseBlocks) * 5,
-                                    interest: (iBlockX - pBlockX) * 5
-                                })
-                            }) : () => {
-                            }}
-                            className={`cursor-pointer w-1/2 h-full ${getColor(assignedPoint, setAllowed)}`}/>
+                    while (!blockFilled()) {
+                        const pointsLeft = 10 - getCurrentRangeSum()
+                        if (pointsLeft === 0) break
+                        const currentPoint = rateEntries[0]
+                        if (currentPoint === undefined) break
+                        const [type, points] = currentPoint;
+
+                        if (points > pointsLeft) {
+                            ranges = [...ranges, [type, pointsLeft]]
+                            rateEntries = ([[type, points - pointsLeft], ...rateEntries.slice(1)])
+                        } else {
+                            ranges = [...ranges, [type, points]]
+                            rateEntries = (rateEntries.slice(1))
+                        }
                     }
 
                     return <div className={`
-                    h-full ${it === 1 && 'rounded-l'} last:rounded-r 
-                    flex overflow-hidden relative`}
+                                h-full ${it === 1 && 'rounded-l'} last:rounded-r 
+                                overflow-hidden relative`}
                                 key={it}>
-                        <PointBlock assignedPoint={thisMidPoint}/>
-                        <PointBlock assignedPoint={thisMaxPoint}/>
-                        {
-                            !midPoint &&
-                            <div
-                                className="absolute top-[.2rem] left-[calc(50%-.05rem)] h-[calc(100%-.4rem)] w-[.1rem] rounded-full bg-zinc-800"/>
-                        }
+                        <PointBlock ranges={ranges} clickAllowed={[true, true]} onClick={[() => {
+                            // TODO
+                        }, () => {
+                            // TODO
+                        }]}/>
+                        <div
+                            className="absolute top-[.2rem] left-[calc(50%-.05rem)] h-[calc(100%-.4rem)] w-[.1rem] rounded-full bg-zinc-800"/>
+
                     </div>
                 })
             }
@@ -182,24 +255,15 @@ export function SkillSlider({rates, onRateChange}: {
 }
 
 export function SkillCategoryEditor(
-    {icon, name, type, data, setData, editHook, edit}:
-        {
-            icon: IconDefinition,
-            name
-                :
-                string,
-            type
-                :
-                SkillCategory,
-            data
-                :
-                InvestigatorSheetDraft,
-            setData
-                :
-                (data: InvestigatorSheetDraft) => void
-            editHook?: (editing: boolean) => void
-            edit?: boolean
-        }) {
+    {icon, name, type, data, setData, editHook, edit}: {
+        icon: IconDefinition,
+        name: string,
+        type: SkillCategory,
+        data: InvestigatorSheetDraft,
+        setData: (data: InvestigatorSheetDraft) => void
+        editHook?: (editing: boolean) => void
+        edit?: boolean
+    }) {
 
     const [skillsDelta, setSkillsDelta] = useState<string[] | undefined>(undefined)
     const skillInfo = Skills[type]
@@ -315,7 +379,7 @@ export function SkillCategoryEditor(
                                                         name={name}/>)
                                         }
                                     </div>
-                                    <SkillSlider rates={
+                                    <SkillSlider points={
                                         {
                                             base: rateBase,
                                             profession: rateProfession,
@@ -323,8 +387,7 @@ export function SkillCategoryEditor(
                                             growth: rateGrowth,
                                             other: rateOther
                                         }
-                                    } onRateChange={({profession, interest}) => {
-                                        console.log(profession, interest)
+                                    } onPointsChange={({profession, interest}) => {
                                         const newSkills = data.skills.map((it: Skill) => {
                                             if (it.name === name) return {
                                                 ...it,
