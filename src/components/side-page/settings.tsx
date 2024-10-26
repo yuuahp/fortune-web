@@ -3,7 +3,7 @@ import {useDispatch, useSelector} from "react-redux";
 import {RootState} from "@/stores/store";
 import {Button, TextField} from "@mui/material";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faGear, faSquareCheck} from "@awesome.me/kit-ae9e2bd1c8/icons/classic/solid";
+import {faFloppyDisk, faGear} from "@awesome.me/kit-ae9e2bd1c8/icons/classic/solid";
 import {setBase} from "@/stores/bcdice-slice";
 
 export function Settings() {
@@ -28,13 +28,13 @@ export function Settings() {
                         className="grow"
                         helperText={baseSaved && "保存しました"}
                     />
-                    <Button variant="contained" startIcon={<FontAwesomeIcon icon={faSquareCheck}/>}
+                    <Button variant="contained" startIcon={<FontAwesomeIcon icon={faFloppyDisk}/>}
                             onClick={() => {
                                 dispatch(setBase(baseURL))
                                 setBaseSaved(true)
                                 setTimeout(() => setBaseSaved(false), 3000)
                             }}
-                            className="h-fit">
+                            className="h-fit text-nowrap">
                         保存
                     </Button>
                 </div>
