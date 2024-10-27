@@ -9,6 +9,7 @@ import {
     faUserGraduate
 } from "@awesome.me/kit-ae9e2bd1c8/icons/classic/solid";
 import {IconDefinition} from "@fortawesome/fontawesome-svg-core";
+import {Skills} from "@/libs/investigator/skills";
 
 export type InvestigatorSheet = {
     name: string
@@ -54,6 +55,33 @@ export type InvestigatorSheetDraft = {
     externalUrl?: string
     icons: string[]
     memo?: string
+}
+
+
+export const initialDraft: InvestigatorSheetDraft = {
+    name: undefined,
+    read: undefined,
+    profession: undefined,
+    age: undefined,
+    gender: undefined,
+    address: undefined,
+    origin: undefined,
+    status: [],
+    params: [],
+    skills: [...Skills.all.map(({name, rateBase, category}): Skill => {
+        return {
+            added: false,
+            name,
+            category: category,
+            rateBase,
+            rateProfession: 0,
+            rateInterest: 0,
+            rateGrowth: 0,
+            rateOther: 0
+        }
+    })],
+    commands: [],
+    icons: []
 }
 
 export function getParam(sheet: InvestigatorSheet | InvestigatorSheetDraft, name: string): number | undefined {

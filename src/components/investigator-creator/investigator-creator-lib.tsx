@@ -7,17 +7,21 @@ import {Skills} from "@/libs/investigator/skills";
 import {LayoutGroup, motion} from "framer-motion";
 import Draggable from 'react-draggable';
 import {IconDefinition} from "@fortawesome/fontawesome-svg-core";
+import {useDispatch, useSelector} from "react-redux";
+import {RootState} from "@/stores/store";
+import {setDraft as setDraftAction} from "@/stores/chara-slice";
 
 export type SkillPointType = "base" | "profession" | "interest" | "growth" | "other"
 
-export function SkillPointInput({className, rate, type, data, setData, name}: {
+export function SkillPointInput({className, rate, type, name}: {
     className?: string,
     rate: number,
     type: SkillPointType,
-    data: InvestigatorSheetDraft,
-    setData: (data: InvestigatorSheetDraft) => void,
     name: string
 }) {
+    const dispatch = useDispatch()
+    const draft = useSelector((state: RootState) => state.chara.draft)
+    const setDraft = (data: InvestigatorSheetDraft) => dispatch(setDraftAction(data))
 
     const [typeJP, key] = (() => {
         switch (type) {
@@ -39,12 +43,12 @@ export function SkillPointInput({className, rate, type, data, setData, name}: {
                       onChange={event => {
                           const newValue = event.target.value.replace(/[^0-9]/g, "");
                           const newRate = newValue === "" ? 0 : parseInt(newValue)
-                          const newSkills = data.skills.map((it: Skill) => {
+                          const newSkills = draft.skills.map((it: Skill) => {
                               if (it.name === name) return {...it, [key]: newRate}
                               else return it
                           })
-                          const newData = {...data, skills: newSkills}
-                          setData(newData)
+                          const newData = {...draft, skills: newSkills}
+                          setDraft(newData)
                       }}/>
 }
 
@@ -254,23 +258,23 @@ export function SkillSlider({points, onPointsChange}: {
     </div>
 }
 
-export function SkillCategoryEditor(
-    {icon, name, type, data, setData, editHook, edit}: {
-        icon: IconDefinition,
-        name: string,
-        type: SkillCategory,
-        data: InvestigatorSheetDraft,
-        setData: (data: InvestigatorSheetDraft) => void
-        editHook?: (editing: boolean) => void
-        edit?: boolean
-    }) {
+export function SkillCategoryEditor({icon, name, type, editHook, edit}: {
+    icon: IconDefinition,
+    name: string,
+    type: SkillCategory,
+    editHook?: (editing: boolean) => void
+    edit?: boolean
+}) {
+    const dispatch = useDispatch()
+    const draft = useSelector((state: RootState) => state.chara.draft)
+    const setDraft = (data: InvestigatorSheetDraft) => dispatch(setDraftAction(data))
 
     const [skillsDelta, setSkillsDelta] = useState<string[] | undefined>(undefined)
     const skillInfo = Skills[type]
-    const addedSkills = data.skills.filter((it: Skill) => it.added && it.category === type)
+    const addedSkills = draft.skills.filter((it: Skill) => it.added && it.category === type)
 
     function initSkillsDelta() {
-        setSkillsDelta(data.skills
+        setSkillsDelta(draft.skills
             .filter((it: Skill) => it.category === type && it.added)
             .map((it: Skill) => it.name))
     }
@@ -278,7 +282,7 @@ export function SkillCategoryEditor(
     function applySkillsDelta() {
         if (skillsDelta === undefined) return
 
-        const newSkills: Skill[] = data.skills
+        const newSkills: Skill[] = draft.skills
             .map((it: Skill): Skill => {
                 if (it.category === type) return ({
                     ...it,
@@ -286,8 +290,8 @@ export function SkillCategoryEditor(
                 })
                 else return it
             })
-        const newData = {...data, skills: newSkills}
-        setData(newData)
+        const newData = {...draft, skills: newSkills}
+        setDraft(newData)
         setSkillsDelta(undefined)
     }
 
@@ -331,7 +335,7 @@ export function SkillCategoryEditor(
                                                    }} key={name}>
                                     <FontAwesomeIcon icon={icon} className="text-xl aspect-square"/>
                                     <motion.p className="text-nowrap truncate">{name}</motion.p>
-                                    <motion.p>{getSkillSum(data, name)}</motion.p>
+                                    <motion.p>{getSkillSum(draft, name)}</motion.p>
                                 </motion.div>
                             })
                         }</div>
@@ -355,7 +359,7 @@ export function SkillCategoryEditor(
                                         <motion.p className="text-nowrap truncate">{name}</motion.p>
                                         <div
                                             className="bg-zinc-700 rounded text-xl font-bold aspect-square h-8 flex items-center justify-center">
-                                            {getSkillSum(data, name)}
+                                            {getSkillSum(draft, name)}
                                         </div>
                                     </motion.div>
                                     <div className="flex gap-2 items-center flex-wrap">
@@ -374,8 +378,6 @@ export function SkillCategoryEditor(
                                                         className="w-16"
                                                         rate={rate}
                                                         type={type}
-                                                        data={data}
-                                                        setData={setData}
                                                         name={name}/>)
                                         }
                                     </div>
@@ -388,7 +390,7 @@ export function SkillCategoryEditor(
                                             other: rateOther
                                         }
                                     } onPointsChange={({profession, interest}) => {
-                                        const newSkills = data.skills.map((it: Skill) => {
+                                        const newSkills = draft.skills.map((it: Skill) => {
                                             if (it.name === name) return {
                                                 ...it,
                                                 rateProfession: profession,
@@ -396,8 +398,8 @@ export function SkillCategoryEditor(
                                             }
                                             else return it
                                         })
-                                        const newData = {...data, skills: newSkills}
-                                        setData(newData)
+                                        const newData = {...draft, skills: newSkills}
+                                        setDraft(newData)
                                     }}/>
                                 </motion.div>
                             })}</div>

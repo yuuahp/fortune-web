@@ -6,14 +6,11 @@ import {
     faPersonRunning
 } from "@awesome.me/kit-ae9e2bd1c8/icons/classic/solid";
 import {IconDefinition} from "@fortawesome/fontawesome-svg-core";
-import {InvestigatorSheetDraft, SkillCategory} from "@/libs/investigator";
+import {SkillCategory} from "@/libs/investigator";
 import {SkillCategoryEditor} from "@/components/investigator-creator/investigator-creator-lib";
 import {useState} from "react";
 
-export function SkillsSection({data, setData}: {
-    data: InvestigatorSheetDraft,
-    setData: (data: InvestigatorSheetDraft) => void
-}) {
+export function SkillsSection() {
     const [editingStatus, setEditingStatus] = useState<boolean[]>([])
 
     return <div className="flex flex-col gap-y-4">
@@ -31,8 +28,6 @@ export function SkillsSection({data, setData}: {
                         icon={icon}
                         name={name}
                         type={type}
-                        data={data}
-                        setData={setData}
                         edit={editingStatus[index]}
                         editHook={editing => {
                             if (editing) {

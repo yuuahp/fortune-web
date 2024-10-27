@@ -103,7 +103,7 @@ export function Main() {
     }
 
     const [sideOpen, setSideOpen] = useState(false)
-    const [sidePage, setSidePage] = useState<SidePageId | undefined>(undefined)
+    const [sidePage, setSidePage] = useState<SidePageId | undefined>("chara-sheet")
 
     function openSidePage(id?: SidePageId) {
         if (id) {

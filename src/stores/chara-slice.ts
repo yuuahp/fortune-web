@@ -1,14 +1,14 @@
 import {createSlice} from "@reduxjs/toolkit";
-import {Investigator, InvestigatorSheetDraft} from "@/libs/investigator";
+import {initialDraft, Investigator, InvestigatorSheetDraft} from "@/libs/investigator";
 
 export type CharaState = {
     characters: Investigator[]
-    draft: any
+    draft: InvestigatorSheetDraft
 }
 
 const initialState: CharaState = {
     characters: [],
-    draft: undefined
+    draft: initialDraft
 }
 
 const charaSlice = createSlice({
@@ -28,7 +28,7 @@ const charaSlice = createSlice({
             state.draft = payload
         },
         clearDraft(state) {
-            state.draft = undefined
+            state.draft = initialDraft
         }
     }
 })
